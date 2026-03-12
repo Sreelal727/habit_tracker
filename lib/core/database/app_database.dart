@@ -10,17 +10,38 @@ import 'tables/goals.dart';
 import 'tables/goal_entries.dart';
 import 'tables/rewards.dart';
 import 'tables/user_settings.dart';
+import 'tables/coin_transactions.dart';
+import 'tables/premium_unlocks.dart';
 import 'daos/habit_dao.dart';
 import 'daos/habit_entry_dao.dart';
 import 'daos/goal_dao.dart';
 import 'daos/goal_entry_dao.dart';
 import 'daos/user_settings_dao.dart';
+import 'daos/coin_dao.dart';
+import 'daos/premium_unlock_dao.dart';
 
 part 'app_database.g.dart';
 
 @DriftDatabase(
-  tables: [Habits, HabitEntries, Goals, GoalEntries, Rewards, UserSettings],
-  daos: [HabitDao, HabitEntryDao, GoalDao, GoalEntryDao, UserSettingsDao],
+  tables: [
+    Habits,
+    HabitEntries,
+    Goals,
+    GoalEntries,
+    Rewards,
+    UserSettings,
+    CoinTransactions,
+    PremiumUnlocks,
+  ],
+  daos: [
+    HabitDao,
+    HabitEntryDao,
+    GoalDao,
+    GoalEntryDao,
+    UserSettingsDao,
+    CoinDao,
+    PremiumUnlockDao,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase._() : super(_openConnection());
@@ -32,7 +53,17 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onUpgrade: (migrator, from, to) async {
+          if (from < 2) {
+            await migrator.createTable(coinTransactions);
+            await migrator.createTable(premiumUnlocks);
+          }
+        },
+      );
 }
 
 LazyDatabase _openConnection() {

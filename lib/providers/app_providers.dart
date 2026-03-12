@@ -5,6 +5,8 @@ import '../core/database/daos/habit_entry_dao.dart';
 import '../core/database/daos/goal_dao.dart';
 import '../core/database/daos/goal_entry_dao.dart';
 import '../core/database/daos/user_settings_dao.dart';
+import '../core/database/daos/coin_dao.dart';
+import '../core/database/daos/premium_unlock_dao.dart';
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   return AppDatabase();
@@ -28,4 +30,12 @@ final goalEntryDaoProvider = Provider<GoalEntryDao>((ref) {
 
 final userSettingsDaoProvider = Provider<UserSettingsDao>((ref) {
   return ref.watch(databaseProvider).userSettingsDao;
+});
+
+final coinDaoProvider = Provider<CoinDao>((ref) {
+  return ref.watch(databaseProvider).coinDao;
+});
+
+final premiumUnlockDaoProvider = Provider<PremiumUnlockDao>((ref) {
+  return ref.watch(databaseProvider).premiumUnlockDao;
 });

@@ -54,3 +54,48 @@ class StreakThresholds {
   static const int gold = 60;
   static const int diamond = 100;
 }
+
+class CoinRewards {
+  CoinRewards._();
+
+  static const int dailyBase = 10;
+  static const int streakBonusPerDay = 2;
+  static const int maxStreakBonus = 20;
+}
+
+class PremiumFeatures {
+  PremiumFeatures._();
+
+  static const Map<String, Map<String, dynamic>> features = {
+    'theme_ocean': {
+      'name': 'Ocean Theme',
+      'description': 'Cool blue ocean-inspired theme',
+      'cost': 100,
+      'icon': 'palette',
+    },
+    'theme_sunset': {
+      'name': 'Sunset Theme',
+      'description': 'Warm sunset gradient theme',
+      'cost': 100,
+      'icon': 'palette',
+    },
+    'theme_forest': {
+      'name': 'Forest Theme',
+      'description': 'Deep green forest theme',
+      'cost': 100,
+      'icon': 'palette',
+    },
+    'advanced_graphs': {
+      'name': 'Advanced Analytics',
+      'description': 'Detailed charts and insights',
+      'cost': 250,
+      'icon': 'analytics',
+    },
+    'calendar_view': {
+      'name': 'Calendar View',
+      'description': 'Color-coded habit calendar',
+      'cost': 200,
+      'icon': 'calendar_month',
+    },
+  };
+}

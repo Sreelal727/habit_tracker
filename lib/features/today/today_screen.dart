@@ -4,23 +4,67 @@ import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'today_notifier.dart';
 import '../../config/constants.dart';
+import '../../config/theme/app_colors.dart';
+import '../../features/coins/coins_notifier.dart';
+import '../../features/coins/daily_reward_dialog.dart';
 import '../../shared/widgets/add_habit_dialog.dart';
 import '../../shared/widgets/add_goal_dialog.dart';
 
-class TodayScreen extends ConsumerWidget {
+class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TodayScreen> createState() => _TodayScreenState();
+}
+
+class _TodayScreenState extends ConsumerState<TodayScreen> {
+  bool _hasShownRewardDialog = false;
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(todayProvider);
     final notifier = ref.read(todayProvider.notifier);
+    final coinsState = ref.watch(coinsProvider);
     final today = DateTime.now();
     final dateStr = DateFormat('EEEE, MMMM d').format(today);
+
+    // Show daily reward dialog
+    if (!_hasShownRewardDialog &&
+        !state.isLoading &&
+        !coinsState.isLoading &&
+        coinsState.canClaimToday) {
+      _hasShownRewardDialog = true;
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) {
+          showDialog(
+            context: context,
+            barrierDismissible: false,
+            builder: (_) => const DailyRewardDialog(),
+          );
+        }
+      });
+    }
 
     return Scaffold(
       appBar: AppBar(
         title: Text(dateStr),
         actions: [
+          // Coin balance chip
+          Padding(
+            padding: const EdgeInsets.only(right: 4),
+            child: ActionChip(
+              avatar: const Icon(Icons.monetization_on,
+                  color: AppColors.secondary, size: 18),
+              label: Text(
+                '${coinsState.coinBalance}',
+                style: const TextStyle(fontWeight: FontWeight.bold),
+              ),
+              onPressed: () => context.push('/settings/shop'),
+              backgroundColor: AppColors.secondary.withOpacity(0.1),
+              side: BorderSide.none,
+              padding: const EdgeInsets.symmetric(horizontal: 4),
+            ),
+          ),
           IconButton(
             icon: const Icon(Icons.settings),
             onPressed: () => context.push('/settings'),

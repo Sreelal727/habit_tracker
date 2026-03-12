@@ -2302,6 +2302,681 @@ class UserSettingsCompanion extends UpdateCompanion<UserSetting> {
   }
 }
 
+class $CoinTransactionsTable extends CoinTransactions
+    with TableInfo<$CoinTransactionsTable, CoinTransaction> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $CoinTransactionsTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _amountMeta = const VerificationMeta('amount');
+  @override
+  late final GeneratedColumn<int> amount = GeneratedColumn<int>(
+    'amount',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _typeMeta = const VerificationMeta('type');
+  @override
+  late final GeneratedColumn<String> type = GeneratedColumn<String>(
+    'type',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _descriptionMeta = const VerificationMeta(
+    'description',
+  );
+  @override
+  late final GeneratedColumn<String> description = GeneratedColumn<String>(
+    'description',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
+  static const VerificationMeta _createdAtMeta = const VerificationMeta(
+    'createdAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> createdAt = GeneratedColumn<DateTime>(
+    'created_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    amount,
+    type,
+    description,
+    createdAt,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'coin_transactions';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<CoinTransaction> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('amount')) {
+      context.handle(
+        _amountMeta,
+        amount.isAcceptableOrUnknown(data['amount']!, _amountMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_amountMeta);
+    }
+    if (data.containsKey('type')) {
+      context.handle(
+        _typeMeta,
+        type.isAcceptableOrUnknown(data['type']!, _typeMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_typeMeta);
+    }
+    if (data.containsKey('description')) {
+      context.handle(
+        _descriptionMeta,
+        description.isAcceptableOrUnknown(
+          data['description']!,
+          _descriptionMeta,
+        ),
+      );
+    }
+    if (data.containsKey('created_at')) {
+      context.handle(
+        _createdAtMeta,
+        createdAt.isAcceptableOrUnknown(data['created_at']!, _createdAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_createdAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  CoinTransaction map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return CoinTransaction(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      amount: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}amount'],
+      )!,
+      type: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}type'],
+      )!,
+      description: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}description'],
+      )!,
+      createdAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}created_at'],
+      )!,
+    );
+  }
+
+  @override
+  $CoinTransactionsTable createAlias(String alias) {
+    return $CoinTransactionsTable(attachedDatabase, alias);
+  }
+}
+
+class CoinTransaction extends DataClass implements Insertable<CoinTransaction> {
+  final String id;
+  final int amount;
+  final String type;
+  final String description;
+  final DateTime createdAt;
+  const CoinTransaction({
+    required this.id,
+    required this.amount,
+    required this.type,
+    required this.description,
+    required this.createdAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['amount'] = Variable<int>(amount);
+    map['type'] = Variable<String>(type);
+    map['description'] = Variable<String>(description);
+    map['created_at'] = Variable<DateTime>(createdAt);
+    return map;
+  }
+
+  CoinTransactionsCompanion toCompanion(bool nullToAbsent) {
+    return CoinTransactionsCompanion(
+      id: Value(id),
+      amount: Value(amount),
+      type: Value(type),
+      description: Value(description),
+      createdAt: Value(createdAt),
+    );
+  }
+
+  factory CoinTransaction.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return CoinTransaction(
+      id: serializer.fromJson<String>(json['id']),
+      amount: serializer.fromJson<int>(json['amount']),
+      type: serializer.fromJson<String>(json['type']),
+      description: serializer.fromJson<String>(json['description']),
+      createdAt: serializer.fromJson<DateTime>(json['createdAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'amount': serializer.toJson<int>(amount),
+      'type': serializer.toJson<String>(type),
+      'description': serializer.toJson<String>(description),
+      'createdAt': serializer.toJson<DateTime>(createdAt),
+    };
+  }
+
+  CoinTransaction copyWith({
+    String? id,
+    int? amount,
+    String? type,
+    String? description,
+    DateTime? createdAt,
+  }) => CoinTransaction(
+    id: id ?? this.id,
+    amount: amount ?? this.amount,
+    type: type ?? this.type,
+    description: description ?? this.description,
+    createdAt: createdAt ?? this.createdAt,
+  );
+  CoinTransaction copyWithCompanion(CoinTransactionsCompanion data) {
+    return CoinTransaction(
+      id: data.id.present ? data.id.value : this.id,
+      amount: data.amount.present ? data.amount.value : this.amount,
+      type: data.type.present ? data.type.value : this.type,
+      description: data.description.present
+          ? data.description.value
+          : this.description,
+      createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CoinTransaction(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, amount, type, description, createdAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is CoinTransaction &&
+          other.id == this.id &&
+          other.amount == this.amount &&
+          other.type == this.type &&
+          other.description == this.description &&
+          other.createdAt == this.createdAt);
+}
+
+class CoinTransactionsCompanion extends UpdateCompanion<CoinTransaction> {
+  final Value<String> id;
+  final Value<int> amount;
+  final Value<String> type;
+  final Value<String> description;
+  final Value<DateTime> createdAt;
+  final Value<int> rowid;
+  const CoinTransactionsCompanion({
+    this.id = const Value.absent(),
+    this.amount = const Value.absent(),
+    this.type = const Value.absent(),
+    this.description = const Value.absent(),
+    this.createdAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  CoinTransactionsCompanion.insert({
+    required String id,
+    required int amount,
+    required String type,
+    this.description = const Value.absent(),
+    required DateTime createdAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       amount = Value(amount),
+       type = Value(type),
+       createdAt = Value(createdAt);
+  static Insertable<CoinTransaction> custom({
+    Expression<String>? id,
+    Expression<int>? amount,
+    Expression<String>? type,
+    Expression<String>? description,
+    Expression<DateTime>? createdAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (amount != null) 'amount': amount,
+      if (type != null) 'type': type,
+      if (description != null) 'description': description,
+      if (createdAt != null) 'created_at': createdAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  CoinTransactionsCompanion copyWith({
+    Value<String>? id,
+    Value<int>? amount,
+    Value<String>? type,
+    Value<String>? description,
+    Value<DateTime>? createdAt,
+    Value<int>? rowid,
+  }) {
+    return CoinTransactionsCompanion(
+      id: id ?? this.id,
+      amount: amount ?? this.amount,
+      type: type ?? this.type,
+      description: description ?? this.description,
+      createdAt: createdAt ?? this.createdAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (amount.present) {
+      map['amount'] = Variable<int>(amount.value);
+    }
+    if (type.present) {
+      map['type'] = Variable<String>(type.value);
+    }
+    if (description.present) {
+      map['description'] = Variable<String>(description.value);
+    }
+    if (createdAt.present) {
+      map['created_at'] = Variable<DateTime>(createdAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('CoinTransactionsCompanion(')
+          ..write('id: $id, ')
+          ..write('amount: $amount, ')
+          ..write('type: $type, ')
+          ..write('description: $description, ')
+          ..write('createdAt: $createdAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $PremiumUnlocksTable extends PremiumUnlocks
+    with TableInfo<$PremiumUnlocksTable, PremiumUnlock> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $PremiumUnlocksTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _featureKeyMeta = const VerificationMeta(
+    'featureKey',
+  );
+  @override
+  late final GeneratedColumn<String> featureKey = GeneratedColumn<String>(
+    'feature_key',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _coinCostMeta = const VerificationMeta(
+    'coinCost',
+  );
+  @override
+  late final GeneratedColumn<int> coinCost = GeneratedColumn<int>(
+    'coin_cost',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _unlockedAtMeta = const VerificationMeta(
+    'unlockedAt',
+  );
+  @override
+  late final GeneratedColumn<DateTime> unlockedAt = GeneratedColumn<DateTime>(
+    'unlocked_at',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [id, featureKey, coinCost, unlockedAt];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'premium_unlocks';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<PremiumUnlock> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('feature_key')) {
+      context.handle(
+        _featureKeyMeta,
+        featureKey.isAcceptableOrUnknown(data['feature_key']!, _featureKeyMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_featureKeyMeta);
+    }
+    if (data.containsKey('coin_cost')) {
+      context.handle(
+        _coinCostMeta,
+        coinCost.isAcceptableOrUnknown(data['coin_cost']!, _coinCostMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_coinCostMeta);
+    }
+    if (data.containsKey('unlocked_at')) {
+      context.handle(
+        _unlockedAtMeta,
+        unlockedAt.isAcceptableOrUnknown(data['unlocked_at']!, _unlockedAtMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_unlockedAtMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  PremiumUnlock map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return PremiumUnlock(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      featureKey: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}feature_key'],
+      )!,
+      coinCost: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}coin_cost'],
+      )!,
+      unlockedAt: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}unlocked_at'],
+      )!,
+    );
+  }
+
+  @override
+  $PremiumUnlocksTable createAlias(String alias) {
+    return $PremiumUnlocksTable(attachedDatabase, alias);
+  }
+}
+
+class PremiumUnlock extends DataClass implements Insertable<PremiumUnlock> {
+  final String id;
+  final String featureKey;
+  final int coinCost;
+  final DateTime unlockedAt;
+  const PremiumUnlock({
+    required this.id,
+    required this.featureKey,
+    required this.coinCost,
+    required this.unlockedAt,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['feature_key'] = Variable<String>(featureKey);
+    map['coin_cost'] = Variable<int>(coinCost);
+    map['unlocked_at'] = Variable<DateTime>(unlockedAt);
+    return map;
+  }
+
+  PremiumUnlocksCompanion toCompanion(bool nullToAbsent) {
+    return PremiumUnlocksCompanion(
+      id: Value(id),
+      featureKey: Value(featureKey),
+      coinCost: Value(coinCost),
+      unlockedAt: Value(unlockedAt),
+    );
+  }
+
+  factory PremiumUnlock.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return PremiumUnlock(
+      id: serializer.fromJson<String>(json['id']),
+      featureKey: serializer.fromJson<String>(json['featureKey']),
+      coinCost: serializer.fromJson<int>(json['coinCost']),
+      unlockedAt: serializer.fromJson<DateTime>(json['unlockedAt']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'featureKey': serializer.toJson<String>(featureKey),
+      'coinCost': serializer.toJson<int>(coinCost),
+      'unlockedAt': serializer.toJson<DateTime>(unlockedAt),
+    };
+  }
+
+  PremiumUnlock copyWith({
+    String? id,
+    String? featureKey,
+    int? coinCost,
+    DateTime? unlockedAt,
+  }) => PremiumUnlock(
+    id: id ?? this.id,
+    featureKey: featureKey ?? this.featureKey,
+    coinCost: coinCost ?? this.coinCost,
+    unlockedAt: unlockedAt ?? this.unlockedAt,
+  );
+  PremiumUnlock copyWithCompanion(PremiumUnlocksCompanion data) {
+    return PremiumUnlock(
+      id: data.id.present ? data.id.value : this.id,
+      featureKey: data.featureKey.present
+          ? data.featureKey.value
+          : this.featureKey,
+      coinCost: data.coinCost.present ? data.coinCost.value : this.coinCost,
+      unlockedAt: data.unlockedAt.present
+          ? data.unlockedAt.value
+          : this.unlockedAt,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PremiumUnlock(')
+          ..write('id: $id, ')
+          ..write('featureKey: $featureKey, ')
+          ..write('coinCost: $coinCost, ')
+          ..write('unlockedAt: $unlockedAt')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(id, featureKey, coinCost, unlockedAt);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is PremiumUnlock &&
+          other.id == this.id &&
+          other.featureKey == this.featureKey &&
+          other.coinCost == this.coinCost &&
+          other.unlockedAt == this.unlockedAt);
+}
+
+class PremiumUnlocksCompanion extends UpdateCompanion<PremiumUnlock> {
+  final Value<String> id;
+  final Value<String> featureKey;
+  final Value<int> coinCost;
+  final Value<DateTime> unlockedAt;
+  final Value<int> rowid;
+  const PremiumUnlocksCompanion({
+    this.id = const Value.absent(),
+    this.featureKey = const Value.absent(),
+    this.coinCost = const Value.absent(),
+    this.unlockedAt = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  PremiumUnlocksCompanion.insert({
+    required String id,
+    required String featureKey,
+    required int coinCost,
+    required DateTime unlockedAt,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       featureKey = Value(featureKey),
+       coinCost = Value(coinCost),
+       unlockedAt = Value(unlockedAt);
+  static Insertable<PremiumUnlock> custom({
+    Expression<String>? id,
+    Expression<String>? featureKey,
+    Expression<int>? coinCost,
+    Expression<DateTime>? unlockedAt,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (featureKey != null) 'feature_key': featureKey,
+      if (coinCost != null) 'coin_cost': coinCost,
+      if (unlockedAt != null) 'unlocked_at': unlockedAt,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  PremiumUnlocksCompanion copyWith({
+    Value<String>? id,
+    Value<String>? featureKey,
+    Value<int>? coinCost,
+    Value<DateTime>? unlockedAt,
+    Value<int>? rowid,
+  }) {
+    return PremiumUnlocksCompanion(
+      id: id ?? this.id,
+      featureKey: featureKey ?? this.featureKey,
+      coinCost: coinCost ?? this.coinCost,
+      unlockedAt: unlockedAt ?? this.unlockedAt,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (featureKey.present) {
+      map['feature_key'] = Variable<String>(featureKey.value);
+    }
+    if (coinCost.present) {
+      map['coin_cost'] = Variable<int>(coinCost.value);
+    }
+    if (unlockedAt.present) {
+      map['unlocked_at'] = Variable<DateTime>(unlockedAt.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('PremiumUnlocksCompanion(')
+          ..write('id: $id, ')
+          ..write('featureKey: $featureKey, ')
+          ..write('coinCost: $coinCost, ')
+          ..write('unlockedAt: $unlockedAt, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
@@ -2311,11 +2986,19 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   late final $GoalEntriesTable goalEntries = $GoalEntriesTable(this);
   late final $RewardsTable rewards = $RewardsTable(this);
   late final $UserSettingsTable userSettings = $UserSettingsTable(this);
+  late final $CoinTransactionsTable coinTransactions = $CoinTransactionsTable(
+    this,
+  );
+  late final $PremiumUnlocksTable premiumUnlocks = $PremiumUnlocksTable(this);
   late final HabitDao habitDao = HabitDao(this as AppDatabase);
   late final HabitEntryDao habitEntryDao = HabitEntryDao(this as AppDatabase);
   late final GoalDao goalDao = GoalDao(this as AppDatabase);
   late final GoalEntryDao goalEntryDao = GoalEntryDao(this as AppDatabase);
   late final UserSettingsDao userSettingsDao = UserSettingsDao(
+    this as AppDatabase,
+  );
+  late final CoinDao coinDao = CoinDao(this as AppDatabase);
+  late final PremiumUnlockDao premiumUnlockDao = PremiumUnlockDao(
     this as AppDatabase,
   );
   @override
@@ -2329,6 +3012,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     goalEntries,
     rewards,
     userSettings,
+    coinTransactions,
+    premiumUnlocks,
   ];
 }
 
@@ -4011,6 +4696,401 @@ typedef $$UserSettingsTableProcessedTableManager =
       UserSetting,
       PrefetchHooks Function()
     >;
+typedef $$CoinTransactionsTableCreateCompanionBuilder =
+    CoinTransactionsCompanion Function({
+      required String id,
+      required int amount,
+      required String type,
+      Value<String> description,
+      required DateTime createdAt,
+      Value<int> rowid,
+    });
+typedef $$CoinTransactionsTableUpdateCompanionBuilder =
+    CoinTransactionsCompanion Function({
+      Value<String> id,
+      Value<int> amount,
+      Value<String> type,
+      Value<String> description,
+      Value<DateTime> createdAt,
+      Value<int> rowid,
+    });
+
+class $$CoinTransactionsTableFilterComposer
+    extends Composer<_$AppDatabase, $CoinTransactionsTable> {
+  $$CoinTransactionsTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$CoinTransactionsTableOrderingComposer
+    extends Composer<_$AppDatabase, $CoinTransactionsTable> {
+  $$CoinTransactionsTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get amount => $composableBuilder(
+    column: $table.amount,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get type => $composableBuilder(
+    column: $table.type,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get createdAt => $composableBuilder(
+    column: $table.createdAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$CoinTransactionsTableAnnotationComposer
+    extends Composer<_$AppDatabase, $CoinTransactionsTable> {
+  $$CoinTransactionsTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<int> get amount =>
+      $composableBuilder(column: $table.amount, builder: (column) => column);
+
+  GeneratedColumn<String> get type =>
+      $composableBuilder(column: $table.type, builder: (column) => column);
+
+  GeneratedColumn<String> get description => $composableBuilder(
+    column: $table.description,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get createdAt =>
+      $composableBuilder(column: $table.createdAt, builder: (column) => column);
+}
+
+class $$CoinTransactionsTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $CoinTransactionsTable,
+          CoinTransaction,
+          $$CoinTransactionsTableFilterComposer,
+          $$CoinTransactionsTableOrderingComposer,
+          $$CoinTransactionsTableAnnotationComposer,
+          $$CoinTransactionsTableCreateCompanionBuilder,
+          $$CoinTransactionsTableUpdateCompanionBuilder,
+          (
+            CoinTransaction,
+            BaseReferences<
+              _$AppDatabase,
+              $CoinTransactionsTable,
+              CoinTransaction
+            >,
+          ),
+          CoinTransaction,
+          PrefetchHooks Function()
+        > {
+  $$CoinTransactionsTableTableManager(
+    _$AppDatabase db,
+    $CoinTransactionsTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$CoinTransactionsTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$CoinTransactionsTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$CoinTransactionsTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<int> amount = const Value.absent(),
+                Value<String> type = const Value.absent(),
+                Value<String> description = const Value.absent(),
+                Value<DateTime> createdAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => CoinTransactionsCompanion(
+                id: id,
+                amount: amount,
+                type: type,
+                description: description,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required int amount,
+                required String type,
+                Value<String> description = const Value.absent(),
+                required DateTime createdAt,
+                Value<int> rowid = const Value.absent(),
+              }) => CoinTransactionsCompanion.insert(
+                id: id,
+                amount: amount,
+                type: type,
+                description: description,
+                createdAt: createdAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$CoinTransactionsTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $CoinTransactionsTable,
+      CoinTransaction,
+      $$CoinTransactionsTableFilterComposer,
+      $$CoinTransactionsTableOrderingComposer,
+      $$CoinTransactionsTableAnnotationComposer,
+      $$CoinTransactionsTableCreateCompanionBuilder,
+      $$CoinTransactionsTableUpdateCompanionBuilder,
+      (
+        CoinTransaction,
+        BaseReferences<_$AppDatabase, $CoinTransactionsTable, CoinTransaction>,
+      ),
+      CoinTransaction,
+      PrefetchHooks Function()
+    >;
+typedef $$PremiumUnlocksTableCreateCompanionBuilder =
+    PremiumUnlocksCompanion Function({
+      required String id,
+      required String featureKey,
+      required int coinCost,
+      required DateTime unlockedAt,
+      Value<int> rowid,
+    });
+typedef $$PremiumUnlocksTableUpdateCompanionBuilder =
+    PremiumUnlocksCompanion Function({
+      Value<String> id,
+      Value<String> featureKey,
+      Value<int> coinCost,
+      Value<DateTime> unlockedAt,
+      Value<int> rowid,
+    });
+
+class $$PremiumUnlocksTableFilterComposer
+    extends Composer<_$AppDatabase, $PremiumUnlocksTable> {
+  $$PremiumUnlocksTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get featureKey => $composableBuilder(
+    column: $table.featureKey,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get coinCost => $composableBuilder(
+    column: $table.coinCost,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$PremiumUnlocksTableOrderingComposer
+    extends Composer<_$AppDatabase, $PremiumUnlocksTable> {
+  $$PremiumUnlocksTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get featureKey => $composableBuilder(
+    column: $table.featureKey,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<int> get coinCost => $composableBuilder(
+    column: $table.coinCost,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$PremiumUnlocksTableAnnotationComposer
+    extends Composer<_$AppDatabase, $PremiumUnlocksTable> {
+  $$PremiumUnlocksTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get featureKey => $composableBuilder(
+    column: $table.featureKey,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<int> get coinCost =>
+      $composableBuilder(column: $table.coinCost, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get unlockedAt => $composableBuilder(
+    column: $table.unlockedAt,
+    builder: (column) => column,
+  );
+}
+
+class $$PremiumUnlocksTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $PremiumUnlocksTable,
+          PremiumUnlock,
+          $$PremiumUnlocksTableFilterComposer,
+          $$PremiumUnlocksTableOrderingComposer,
+          $$PremiumUnlocksTableAnnotationComposer,
+          $$PremiumUnlocksTableCreateCompanionBuilder,
+          $$PremiumUnlocksTableUpdateCompanionBuilder,
+          (
+            PremiumUnlock,
+            BaseReferences<_$AppDatabase, $PremiumUnlocksTable, PremiumUnlock>,
+          ),
+          PremiumUnlock,
+          PrefetchHooks Function()
+        > {
+  $$PremiumUnlocksTableTableManager(
+    _$AppDatabase db,
+    $PremiumUnlocksTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$PremiumUnlocksTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$PremiumUnlocksTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$PremiumUnlocksTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> featureKey = const Value.absent(),
+                Value<int> coinCost = const Value.absent(),
+                Value<DateTime> unlockedAt = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => PremiumUnlocksCompanion(
+                id: id,
+                featureKey: featureKey,
+                coinCost: coinCost,
+                unlockedAt: unlockedAt,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String featureKey,
+                required int coinCost,
+                required DateTime unlockedAt,
+                Value<int> rowid = const Value.absent(),
+              }) => PremiumUnlocksCompanion.insert(
+                id: id,
+                featureKey: featureKey,
+                coinCost: coinCost,
+                unlockedAt: unlockedAt,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$PremiumUnlocksTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $PremiumUnlocksTable,
+      PremiumUnlock,
+      $$PremiumUnlocksTableFilterComposer,
+      $$PremiumUnlocksTableOrderingComposer,
+      $$PremiumUnlocksTableAnnotationComposer,
+      $$PremiumUnlocksTableCreateCompanionBuilder,
+      $$PremiumUnlocksTableUpdateCompanionBuilder,
+      (
+        PremiumUnlock,
+        BaseReferences<_$AppDatabase, $PremiumUnlocksTable, PremiumUnlock>,
+      ),
+      PremiumUnlock,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -4027,4 +5107,8 @@ class $AppDatabaseManager {
       $$RewardsTableTableManager(_db, _db.rewards);
   $$UserSettingsTableTableManager get userSettings =>
       $$UserSettingsTableTableManager(_db, _db.userSettings);
+  $$CoinTransactionsTableTableManager get coinTransactions =>
+      $$CoinTransactionsTableTableManager(_db, _db.coinTransactions);
+  $$PremiumUnlocksTableTableManager get premiumUnlocks =>
+      $$PremiumUnlocksTableTableManager(_db, _db.premiumUnlocks);
 }
