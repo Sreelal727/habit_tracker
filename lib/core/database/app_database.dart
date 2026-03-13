@@ -53,7 +53,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -61,6 +61,11 @@ class AppDatabase extends _$AppDatabase {
           if (from < 2) {
             await migrator.createTable(coinTransactions);
             await migrator.createTable(premiumUnlocks);
+          }
+          if (from < 3) {
+            await customStatement(
+              "ALTER TABLE habits ADD COLUMN customization TEXT NOT NULL DEFAULT '{}'",
+            );
           }
         },
       );

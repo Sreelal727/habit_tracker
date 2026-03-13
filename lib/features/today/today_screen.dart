@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -272,9 +273,33 @@ class _HabitTile extends StatelessWidget {
     required this.onToggle,
   });
 
+  String? _getCustomSubtitle() {
+    try {
+      final customStr = habit.customization as String;
+      if (customStr.isEmpty || customStr == '{}') return null;
+      final custom = jsonDecode(customStr) as Map<String, dynamic>;
+      if (custom.isEmpty) return null;
+
+      final parts = <String>[];
+      for (final entry in custom.entries) {
+        final val = entry.value;
+        if (val is double && val % 1 == 0) {
+          parts.add('${val.toInt()}');
+        } else {
+          parts.add('$val');
+        }
+      }
+      return parts.join(' | ');
+    } catch (_) {
+      return null;
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final color = Color(habit.color);
+    final subtitle = _getCustomSubtitle();
+
     return ListTile(
       contentPadding: EdgeInsets.zero,
       leading: GestureDetector(
@@ -302,6 +327,15 @@ class _HabitTile extends StatelessWidget {
           fontWeight: FontWeight.w500,
         ),
       ),
+      subtitle: subtitle != null
+          ? Text(
+              subtitle,
+              style: Theme.of(context)
+                  .textTheme
+                  .bodySmall
+                  ?.copyWith(color: Colors.grey[500]),
+            )
+          : null,
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [

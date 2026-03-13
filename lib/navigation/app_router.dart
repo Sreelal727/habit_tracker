@@ -7,6 +7,7 @@ import '../features/auth/welcome_screen.dart';
 import '../features/auth/login_screen.dart';
 import '../features/auth/signup_screen.dart';
 import '../features/auth/forgot_password_screen.dart';
+import '../features/onboarding/habit_selection_screen.dart';
 import '../features/today/today_screen.dart';
 import '../features/tracker/tracker_screen.dart';
 import '../features/goals/goals_screen.dart';
@@ -14,6 +15,7 @@ import '../features/graphs/stats_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/manage_habits_screen.dart';
 import '../features/coins/shop_screen.dart';
+import '../providers/app_providers.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
@@ -41,15 +43,30 @@ final routerProvider = Provider<GoRouter>((ref) {
     navigatorKey: _rootNavigatorKey,
     initialLocation: '/today',
     refreshListenable: authNotifier,
-    redirect: (context, state) {
+    redirect: (context, state) async {
       final isLoggedIn = FirebaseAuth.instance.currentUser != null;
       final isAuthRoute = state.matchedLocation == '/welcome' ||
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
           state.matchedLocation == '/forgot-password';
+      final isOnboarding = state.matchedLocation == '/onboarding';
 
       if (!isLoggedIn && !isAuthRoute) return '/welcome';
-      if (isLoggedIn && isAuthRoute) return '/today';
+      if (!isLoggedIn) return null;
+
+      // User is logged in — check onboarding
+      final settingsDao = ref.read(userSettingsDaoProvider);
+      final isOnboardingComplete =
+          await settingsDao.getBool('onboarding_complete');
+
+      if (isAuthRoute) {
+        return isOnboardingComplete ? '/today' : '/onboarding';
+      }
+
+      if (!isOnboarding && !isOnboardingComplete) {
+        return '/onboarding';
+      }
+
       return null;
     },
     routes: [
@@ -69,6 +86,12 @@ final routerProvider = Provider<GoRouter>((ref) {
       GoRoute(
         path: '/forgot-password',
         builder: (context, state) => const ForgotPasswordScreen(),
+      ),
+      // Onboarding
+      GoRoute(
+        path: '/onboarding',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const HabitSelectionScreen(),
       ),
       // Main app routes
       StatefulShellRoute.indexedStack(

@@ -9,6 +9,7 @@ class Habits extends Table {
   BoolColumn get isArchived => boolean().withDefault(const Constant(false))();
   TextColumn get frequency => text().withDefault(const Constant('daily'))();
   TextColumn get customDays => text().withDefault(const Constant(''))();
+  TextColumn get customization => text().withDefault(const Constant('{}'))();
   DateTimeColumn get createdAt => dateTime().withDefault(currentDateAndTime)();
 
   @override

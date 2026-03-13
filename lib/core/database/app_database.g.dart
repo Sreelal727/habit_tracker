@@ -98,6 +98,18 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     requiredDuringInsert: false,
     defaultValue: const Constant(''),
   );
+  static const VerificationMeta _customizationMeta = const VerificationMeta(
+    'customization',
+  );
+  @override
+  late final GeneratedColumn<String> customization = GeneratedColumn<String>(
+    'customization',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant('{}'),
+  );
   static const VerificationMeta _createdAtMeta = const VerificationMeta(
     'createdAt',
   );
@@ -120,6 +132,7 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     isArchived,
     frequency,
     customDays,
+    customization,
     createdAt,
   ];
   @override
@@ -183,6 +196,12 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         customDays.isAcceptableOrUnknown(data['custom_days']!, _customDaysMeta),
       );
     }
+    if (data.containsKey('customization')) {
+      context.handle(
+        _customizationMeta,
+        customization.isAcceptableOrUnknown(data['customization']!, _customizationMeta),
+      );
+    }
     if (data.containsKey('created_at')) {
       context.handle(
         _createdAtMeta,
@@ -230,6 +249,10 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
         DriftSqlType.string,
         data['${effectivePrefix}custom_days'],
       )!,
+      customization: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}customization'],
+      )!,
       createdAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}created_at'],
@@ -252,6 +275,7 @@ class Habit extends DataClass implements Insertable<Habit> {
   final bool isArchived;
   final String frequency;
   final String customDays;
+  final String customization;
   final DateTime createdAt;
   const Habit({
     required this.id,
@@ -262,6 +286,7 @@ class Habit extends DataClass implements Insertable<Habit> {
     required this.isArchived,
     required this.frequency,
     required this.customDays,
+    required this.customization,
     required this.createdAt,
   });
   @override
@@ -275,6 +300,7 @@ class Habit extends DataClass implements Insertable<Habit> {
     map['is_archived'] = Variable<bool>(isArchived);
     map['frequency'] = Variable<String>(frequency);
     map['custom_days'] = Variable<String>(customDays);
+    map['customization'] = Variable<String>(customization);
     map['created_at'] = Variable<DateTime>(createdAt);
     return map;
   }
@@ -289,6 +315,7 @@ class Habit extends DataClass implements Insertable<Habit> {
       isArchived: Value(isArchived),
       frequency: Value(frequency),
       customDays: Value(customDays),
+      customization: Value(customization),
       createdAt: Value(createdAt),
     );
   }
@@ -307,6 +334,7 @@ class Habit extends DataClass implements Insertable<Habit> {
       isArchived: serializer.fromJson<bool>(json['isArchived']),
       frequency: serializer.fromJson<String>(json['frequency']),
       customDays: serializer.fromJson<String>(json['customDays']),
+      customization: serializer.fromJson<String>(json['customization']),
       createdAt: serializer.fromJson<DateTime>(json['createdAt']),
     );
   }
@@ -322,6 +350,7 @@ class Habit extends DataClass implements Insertable<Habit> {
       'isArchived': serializer.toJson<bool>(isArchived),
       'frequency': serializer.toJson<String>(frequency),
       'customDays': serializer.toJson<String>(customDays),
+      'customization': serializer.toJson<String>(customization),
       'createdAt': serializer.toJson<DateTime>(createdAt),
     };
   }
@@ -335,6 +364,7 @@ class Habit extends DataClass implements Insertable<Habit> {
     bool? isArchived,
     String? frequency,
     String? customDays,
+    String? customization,
     DateTime? createdAt,
   }) => Habit(
     id: id ?? this.id,
@@ -345,6 +375,7 @@ class Habit extends DataClass implements Insertable<Habit> {
     isArchived: isArchived ?? this.isArchived,
     frequency: frequency ?? this.frequency,
     customDays: customDays ?? this.customDays,
+    customization: customization ?? this.customization,
     createdAt: createdAt ?? this.createdAt,
   );
   Habit copyWithCompanion(HabitsCompanion data) {
@@ -361,6 +392,9 @@ class Habit extends DataClass implements Insertable<Habit> {
       customDays: data.customDays.present
           ? data.customDays.value
           : this.customDays,
+      customization: data.customization.present
+          ? data.customization.value
+          : this.customization,
       createdAt: data.createdAt.present ? data.createdAt.value : this.createdAt,
     );
   }
@@ -376,6 +410,7 @@ class Habit extends DataClass implements Insertable<Habit> {
           ..write('isArchived: $isArchived, ')
           ..write('frequency: $frequency, ')
           ..write('customDays: $customDays, ')
+          ..write('customization: $customization, ')
           ..write('createdAt: $createdAt')
           ..write(')'))
         .toString();
@@ -391,6 +426,7 @@ class Habit extends DataClass implements Insertable<Habit> {
     isArchived,
     frequency,
     customDays,
+    customization,
     createdAt,
   );
   @override
@@ -405,6 +441,7 @@ class Habit extends DataClass implements Insertable<Habit> {
           other.isArchived == this.isArchived &&
           other.frequency == this.frequency &&
           other.customDays == this.customDays &&
+          other.customization == this.customization &&
           other.createdAt == this.createdAt);
 }
 
@@ -417,6 +454,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
   final Value<bool> isArchived;
   final Value<String> frequency;
   final Value<String> customDays;
+  final Value<String> customization;
   final Value<DateTime> createdAt;
   final Value<int> rowid;
   const HabitsCompanion({
@@ -428,6 +466,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     this.isArchived = const Value.absent(),
     this.frequency = const Value.absent(),
     this.customDays = const Value.absent(),
+    this.customization = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -440,6 +479,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     this.isArchived = const Value.absent(),
     this.frequency = const Value.absent(),
     this.customDays = const Value.absent(),
+    this.customization = const Value.absent(),
     this.createdAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -453,6 +493,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     Expression<bool>? isArchived,
     Expression<String>? frequency,
     Expression<String>? customDays,
+    Expression<String>? customization,
     Expression<DateTime>? createdAt,
     Expression<int>? rowid,
   }) {
@@ -465,6 +506,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
       if (isArchived != null) 'is_archived': isArchived,
       if (frequency != null) 'frequency': frequency,
       if (customDays != null) 'custom_days': customDays,
+      if (customization != null) 'customization': customization,
       if (createdAt != null) 'created_at': createdAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -479,6 +521,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     Value<bool>? isArchived,
     Value<String>? frequency,
     Value<String>? customDays,
+    Value<String>? customization,
     Value<DateTime>? createdAt,
     Value<int>? rowid,
   }) {
@@ -491,6 +534,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
       isArchived: isArchived ?? this.isArchived,
       frequency: frequency ?? this.frequency,
       customDays: customDays ?? this.customDays,
+      customization: customization ?? this.customization,
       createdAt: createdAt ?? this.createdAt,
       rowid: rowid ?? this.rowid,
     );
@@ -523,6 +567,9 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
     if (customDays.present) {
       map['custom_days'] = Variable<String>(customDays.value);
     }
+    if (customization.present) {
+      map['customization'] = Variable<String>(customization.value);
+    }
     if (createdAt.present) {
       map['created_at'] = Variable<DateTime>(createdAt.value);
     }
@@ -543,6 +590,7 @@ class HabitsCompanion extends UpdateCompanion<Habit> {
           ..write('isArchived: $isArchived, ')
           ..write('frequency: $frequency, ')
           ..write('customDays: $customDays, ')
+          ..write('customization: $customization, ')
           ..write('createdAt: $createdAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -3027,6 +3075,7 @@ typedef $$HabitsTableCreateCompanionBuilder =
       Value<bool> isArchived,
       Value<String> frequency,
       Value<String> customDays,
+      Value<String> customization,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -3040,6 +3089,7 @@ typedef $$HabitsTableUpdateCompanionBuilder =
       Value<bool> isArchived,
       Value<String> frequency,
       Value<String> customDays,
+      Value<String> customization,
       Value<DateTime> createdAt,
       Value<int> rowid,
     });
@@ -3113,6 +3163,11 @@ class $$HabitsTableFilterComposer
 
   ColumnFilters<String> get customDays => $composableBuilder(
     column: $table.customDays,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get customization => $composableBuilder(
+    column: $table.customization,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3196,6 +3251,11 @@ class $$HabitsTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get customization => $composableBuilder(
+    column: $table.customization,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get createdAt => $composableBuilder(
     column: $table.createdAt,
     builder: (column) => ColumnOrderings(column),
@@ -3236,6 +3296,11 @@ class $$HabitsTableAnnotationComposer
 
   GeneratedColumn<String> get customDays => $composableBuilder(
     column: $table.customDays,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<String> get customization => $composableBuilder(
+    column: $table.customization,
     builder: (column) => column,
   );
 
@@ -3304,6 +3369,7 @@ class $$HabitsTableTableManager
                 Value<bool> isArchived = const Value.absent(),
                 Value<String> frequency = const Value.absent(),
                 Value<String> customDays = const Value.absent(),
+                Value<String> customization = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsCompanion(
@@ -3315,6 +3381,7 @@ class $$HabitsTableTableManager
                 isArchived: isArchived,
                 frequency: frequency,
                 customDays: customDays,
+                customization: customization,
                 createdAt: createdAt,
                 rowid: rowid,
               ),
@@ -3328,6 +3395,7 @@ class $$HabitsTableTableManager
                 Value<bool> isArchived = const Value.absent(),
                 Value<String> frequency = const Value.absent(),
                 Value<String> customDays = const Value.absent(),
+                Value<String> customization = const Value.absent(),
                 Value<DateTime> createdAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => HabitsCompanion.insert(
@@ -3339,6 +3407,7 @@ class $$HabitsTableTableManager
                 isArchived: isArchived,
                 frequency: frequency,
                 customDays: customDays,
+                customization: customization,
                 createdAt: createdAt,
                 rowid: rowid,
               ),

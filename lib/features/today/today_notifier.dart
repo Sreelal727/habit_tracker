@@ -1,14 +1,11 @@
 import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:uuid/uuid.dart';
-import 'package:drift/drift.dart';
 import '../../core/database/app_database.dart';
 import '../../core/database/daos/habit_dao.dart';
 import '../../core/database/daos/habit_entry_dao.dart';
 import '../../core/database/daos/goal_dao.dart';
 import '../../core/database/daos/goal_entry_dao.dart';
-import '../../core/database/daos/user_settings_dao.dart';
-import '../../config/constants.dart';
 import '../../providers/app_providers.dart';
 
 const _uuid = Uuid();
@@ -62,7 +59,6 @@ class TodayNotifier extends StateNotifier<TodayState> {
   final HabitEntryDao _habitEntryDao;
   final GoalDao _goalDao;
   final GoalEntryDao _goalEntryDao;
-  final UserSettingsDao _settingsDao;
 
   StreamSubscription? _habitsSub;
   StreamSubscription? _entriesSub;
@@ -74,34 +70,15 @@ class TodayNotifier extends StateNotifier<TodayState> {
     this._habitEntryDao,
     this._goalDao,
     this._goalEntryDao,
-    this._settingsDao,
   ) : super(const TodayState()) {
     _init();
   }
 
   Future<void> _init() async {
-    await _seedDefaultHabitsIfNeeded();
     _watchHabits();
     _watchEntries();
     _watchGoals();
     _watchGoalEntries();
-  }
-
-  Future<void> _seedDefaultHabitsIfNeeded() async {
-    final seeded = await _settingsDao.getBool('habits_seeded');
-    if (seeded) return;
-
-    for (var i = 0; i < DefaultHabits.habits.length; i++) {
-      final h = DefaultHabits.habits[i];
-      await _habitDao.insertHabit(HabitsCompanion.insert(
-        id: _uuid.v4(),
-        name: h['name'] as String,
-        icon: Value(h['icon'] as String),
-        color: Value(h['color'] as int),
-        sortOrder: Value(i),
-      ));
-    }
-    await _settingsDao.setBool('habits_seeded', true);
   }
 
   void _watchHabits() {
@@ -194,6 +171,5 @@ final todayProvider = StateNotifierProvider<TodayNotifier, TodayState>((ref) {
     ref.watch(habitEntryDaoProvider),
     ref.watch(goalDaoProvider),
     ref.watch(goalEntryDaoProvider),
-    ref.watch(userSettingsDaoProvider),
   );
 });
