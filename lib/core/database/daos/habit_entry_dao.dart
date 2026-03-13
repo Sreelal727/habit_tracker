@@ -44,6 +44,7 @@ class HabitEntryDao extends DatabaseAccessor<AppDatabase>
               ..where((e) => e.id.equals(existing.id)))
             .write(const HabitEntriesCompanion(
           completed: Value(false),
+          completionPercent: Value(0),
           completedAt: Value(null),
         ));
       } else {
@@ -51,6 +52,7 @@ class HabitEntryDao extends DatabaseAccessor<AppDatabase>
               ..where((e) => e.id.equals(existing.id)))
             .write(HabitEntriesCompanion(
           completed: const Value(true),
+          completionPercent: const Value(100),
           completedAt: Value(DateTime.now()),
         ));
       }
@@ -60,7 +62,37 @@ class HabitEntryDao extends DatabaseAccessor<AppDatabase>
         habitId: habitId,
         date: d,
         completed: const Value(true),
+        completionPercent: const Value(100),
         completedAt: Value(DateTime.now()),
+      ));
+    }
+  }
+
+  Future<void> updateCompletionPercent(
+      String id, String habitId, DateTime date, int percent) async {
+    final d = _dateOnly(date);
+    final clamped = percent.clamp(0, 100);
+    final isCompleted = clamped >= 100;
+    final existing = await (select(habitEntries)
+          ..where((e) => e.habitId.equals(habitId) & e.date.equals(d)))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      await (update(habitEntries)
+            ..where((e) => e.id.equals(existing.id)))
+          .write(HabitEntriesCompanion(
+        completed: Value(isCompleted),
+        completionPercent: Value(clamped),
+        completedAt: Value(isCompleted ? DateTime.now() : null),
+      ));
+    } else {
+      await into(habitEntries).insert(HabitEntriesCompanion.insert(
+        id: id,
+        habitId: habitId,
+        date: d,
+        completed: Value(isCompleted),
+        completionPercent: Value(clamped),
+        completedAt: Value(isCompleted ? DateTime.now() : null),
       ));
     }
   }

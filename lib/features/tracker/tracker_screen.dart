@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'tracker_notifier.dart';
 import '../../config/constants.dart';
+import '../../shared/widgets/percent_slider_dialog.dart';
 
 class TrackerScreen extends ConsumerWidget {
   const TrackerScreen({super.key});
@@ -57,7 +58,8 @@ class TrackerScreen extends ConsumerWidget {
                           color: _isToday(date)
                               ? Theme.of(context).colorScheme.primary
                               : isFuture
-                                  ? colorScheme.onSurfaceVariant.withValues(alpha: 0.4)
+                                  ? colorScheme.onSurfaceVariant
+                                      .withValues(alpha: 0.4)
                                   : colorScheme.onSurfaceVariant,
                           fontWeight: _isToday(date) ? FontWeight.bold : null,
                         ),
@@ -119,11 +121,22 @@ class TrackerScreen extends ConsumerWidget {
                     ),
                     ...dates.map((date) {
                       final isFuture = date.isAfter(today);
-                      final completed = state.isCompleted(habit.id, date);
+                      final percent = state.getPercent(habit.id, date);
+                      final completed = percent >= 100;
                       return GestureDetector(
                         onTap: isFuture
                             ? null
                             : () => notifier.toggleEntry(habit.id, date),
+                        onLongPress: isFuture
+                            ? null
+                            : () => _showPercentSlider(
+                                  context,
+                                  habit.name,
+                                  percent,
+                                  color,
+                                  (p) =>
+                                      notifier.updatePercent(habit.id, date, p),
+                                ),
                         child: Container(
                           width: 28,
                           height: 28,
@@ -134,7 +147,10 @@ class TrackerScreen extends ConsumerWidget {
                                     .withValues(alpha: 0.5)
                                 : completed
                                     ? color
-                                    : color.withValues(alpha: 0.08),
+                                    : percent > 0
+                                        ? color.withValues(
+                                            alpha: 0.1 + (percent / 100 * 0.6))
+                                        : color.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(6),
                           ),
                           child: isFuture
@@ -142,7 +158,20 @@ class TrackerScreen extends ConsumerWidget {
                               : completed
                                   ? const Icon(Icons.check,
                                       size: 14, color: Colors.white)
-                                  : null,
+                                  : percent > 0
+                                      ? Center(
+                                          child: Text(
+                                            '$percent',
+                                            style: TextStyle(
+                                              fontSize: 8,
+                                              fontWeight: FontWeight.bold,
+                                              color: percent > 50
+                                                  ? Colors.white
+                                                  : color,
+                                            ),
+                                          ),
+                                        )
+                                      : null,
                         ),
                       );
                     }),
@@ -154,6 +183,31 @@ class TrackerScreen extends ConsumerWidget {
         ),
       ),
     );
+  }
+
+  void _showPercentSlider(
+    BuildContext context,
+    String title,
+    int currentPercent,
+    Color color,
+    ValueChanged<int> onSave,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PercentSliderDialog(
+        title: title,
+        initialPercent: currentPercent,
+        accentColor: color,
+      ),
+    ).then((result) {
+      if (result != null && result is int) {
+        onSave(result);
+      }
+    });
   }
 
   bool _isToday(DateTime date) {

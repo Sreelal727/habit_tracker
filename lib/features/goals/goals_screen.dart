@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:intl/intl.dart';
 import 'goals_notifier.dart';
 import '../../shared/widgets/add_goal_dialog.dart';
+import '../../shared/widgets/percent_slider_dialog.dart';
 
 class GoalsScreen extends ConsumerWidget {
   const GoalsScreen({super.key});
@@ -32,6 +33,29 @@ class GoalsScreen extends ConsumerWidget {
   }
 }
 
+void _showPercentSlider(
+  BuildContext context,
+  String title,
+  int currentPercent,
+  ValueChanged<int> onSave,
+) {
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+    ),
+    builder: (_) => PercentSliderDialog(
+      title: title,
+      initialPercent: currentPercent,
+    ),
+  ).then((result) {
+    if (result != null && result is int) {
+      onSave(result);
+    }
+  });
+}
+
 class _WeeklyGoalsTab extends ConsumerWidget {
   const _WeeklyGoalsTab();
 
@@ -46,12 +70,12 @@ class _WeeklyGoalsTab extends ConsumerWidget {
     final weekLabel =
         '${DateFormat('MMM d').format(weekStart)} - ${DateFormat('MMM d').format(weekEnd)}';
 
-    final completedCount =
-        state.weeklyGoals.where((g) => state.isWeeklyGoalCompleted(g.id)).length;
     final totalCount = state.weeklyGoals.length;
-    final percentage = totalCount > 0
-        ? (completedCount / totalCount * 100).round()
-        : 0;
+    final totalPercent = totalCount > 0
+        ? state.weeklyGoals.fold<int>(
+                0, (sum, g) => sum + state.getWeeklyGoalPercent(g.id)) /
+            totalCount
+        : 0.0;
 
     return Column(
       children: [
@@ -85,14 +109,14 @@ class _WeeklyGoalsTab extends ConsumerWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                      value: completedCount / totalCount,
+                      value: totalPercent / 100,
                       minHeight: 6,
                       backgroundColor: colorScheme.surfaceContainerHighest,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text('$percentage%',
+                Text('${totalPercent.round()}%',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600)),
@@ -110,20 +134,52 @@ class _WeeklyGoalsTab extends ConsumerWidget {
                   itemCount: state.weeklyGoals.length,
                   itemBuilder: (context, index) {
                     final goal = state.weeklyGoals[index];
-                    final isCompleted = state.isWeeklyGoalCompleted(goal.id);
+                    final percent = state.getWeeklyGoalPercent(goal.id);
                     return ListTile(
                       leading: Checkbox(
-                        value: isCompleted,
+                        value: percent >= 100,
                         onChanged: (_) => notifier.toggleWeeklyGoal(goal.id),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4)),
                       ),
-                      title: Text(
-                        goal.title,
-                        style: TextStyle(
-                          color: isCompleted
-                              ? colorScheme.onSurfaceVariant
-                              : null,
+                      title: GestureDetector(
+                        onLongPress: () => _showPercentSlider(
+                          context,
+                          goal.title,
+                          percent,
+                          (p) => notifier.updateWeeklyGoalPercent(goal.id, p),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                goal.title,
+                                style: TextStyle(
+                                  color: percent >= 100
+                                      ? colorScheme.onSurfaceVariant
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            if (percent > 0 && percent < 100)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$percent%',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       trailing: IconButton(
@@ -173,12 +229,12 @@ class _YearlyGoalsTab extends ConsumerWidget {
     final colorScheme = Theme.of(context).colorScheme;
     final year = DateTime.now().year;
 
-    final completedCount =
-        state.yearlyGoals.where((g) => state.isYearlyGoalCompleted(g.id)).length;
     final totalCount = state.yearlyGoals.length;
-    final percentage = totalCount > 0
-        ? (completedCount / totalCount * 100).round()
-        : 0;
+    final totalPercent = totalCount > 0
+        ? state.yearlyGoals.fold<int>(
+                0, (sum, g) => sum + state.getYearlyGoalPercent(g.id)) /
+            totalCount
+        : 0.0;
 
     return Column(
       children: [
@@ -199,14 +255,14 @@ class _YearlyGoalsTab extends ConsumerWidget {
                   child: ClipRRect(
                     borderRadius: BorderRadius.circular(4),
                     child: LinearProgressIndicator(
-                      value: completedCount / totalCount,
+                      value: totalPercent / 100,
                       minHeight: 6,
                       backgroundColor: colorScheme.surfaceContainerHighest,
                     ),
                   ),
                 ),
                 const SizedBox(width: 12),
-                Text('$percentage%',
+                Text('${totalPercent.round()}%',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant,
                         fontWeight: FontWeight.w600)),
@@ -224,20 +280,52 @@ class _YearlyGoalsTab extends ConsumerWidget {
                   itemCount: state.yearlyGoals.length,
                   itemBuilder: (context, index) {
                     final goal = state.yearlyGoals[index];
-                    final isCompleted = state.isYearlyGoalCompleted(goal.id);
+                    final percent = state.getYearlyGoalPercent(goal.id);
                     return ListTile(
                       leading: Checkbox(
-                        value: isCompleted,
+                        value: percent >= 100,
                         onChanged: (_) => notifier.toggleYearlyGoal(goal.id),
                         shape: RoundedRectangleBorder(
                             borderRadius: BorderRadius.circular(4)),
                       ),
-                      title: Text(
-                        goal.title,
-                        style: TextStyle(
-                          color: isCompleted
-                              ? colorScheme.onSurfaceVariant
-                              : null,
+                      title: GestureDetector(
+                        onLongPress: () => _showPercentSlider(
+                          context,
+                          goal.title,
+                          percent,
+                          (p) => notifier.updateYearlyGoalPercent(goal.id, p),
+                        ),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                goal.title,
+                                style: TextStyle(
+                                  color: percent >= 100
+                                      ? colorScheme.onSurfaceVariant
+                                      : null,
+                                ),
+                              ),
+                            ),
+                            if (percent > 0 && percent < 100)
+                              Container(
+                                padding: const EdgeInsets.symmetric(
+                                    horizontal: 8, vertical: 2),
+                                decoration: BoxDecoration(
+                                  color: colorScheme.primary
+                                      .withValues(alpha: 0.1),
+                                  borderRadius: BorderRadius.circular(10),
+                                ),
+                                child: Text(
+                                  '$percent%',
+                                  style: TextStyle(
+                                    fontSize: 12,
+                                    fontWeight: FontWeight.w600,
+                                    color: colorScheme.primary,
+                                  ),
+                                ),
+                              ),
+                          ],
                         ),
                       ),
                       trailing: IconButton(

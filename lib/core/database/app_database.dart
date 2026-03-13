@@ -53,7 +53,7 @@ class AppDatabase extends _$AppDatabase {
   }
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -65,6 +65,20 @@ class AppDatabase extends _$AppDatabase {
           if (from < 3) {
             await customStatement(
               "ALTER TABLE habits ADD COLUMN customization TEXT NOT NULL DEFAULT '{}'",
+            );
+          }
+          if (from < 4) {
+            await customStatement(
+              'ALTER TABLE habit_entries ADD COLUMN completion_percent INTEGER NOT NULL DEFAULT 0',
+            );
+            await customStatement(
+              'ALTER TABLE goal_entries ADD COLUMN completion_percent INTEGER NOT NULL DEFAULT 0',
+            );
+            await customStatement(
+              'UPDATE habit_entries SET completion_percent = 100 WHERE completed = 1',
+            );
+            await customStatement(
+              'UPDATE goal_entries SET completion_percent = 100 WHERE completed = 1',
             );
           }
         },

@@ -6,6 +6,7 @@ class HabitEntries extends Table {
   TextColumn get habitId => text().references(Habits, #id)();
   DateTimeColumn get date => dateTime()();
   BoolColumn get completed => boolean().withDefault(const Constant(false))();
+  IntColumn get completionPercent => integer().withDefault(const Constant(0))();
   DateTimeColumn get completedAt => dateTime().nullable()();
   TextColumn get note => text().withDefault(const Constant(''))();
 

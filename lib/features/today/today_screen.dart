@@ -10,6 +10,7 @@ import '../../features/coins/coins_notifier.dart';
 import '../../features/coins/daily_reward_dialog.dart';
 import '../../shared/widgets/add_habit_dialog.dart';
 import '../../shared/widgets/add_goal_dialog.dart';
+import '../../shared/widgets/percent_slider_dialog.dart';
 
 class TodayScreen extends ConsumerStatefulWidget {
   const TodayScreen({super.key});
@@ -91,12 +92,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   Widget _buildHabitsCard(
       BuildContext context, TodayState state, TodayNotifier notifier) {
-    final completedCount =
-        state.habits.where((h) => state.isHabitCompleted(h.id)).length;
     final totalCount = state.habits.length;
-    final percentage = totalCount > 0
-        ? (completedCount / totalCount * 100).round()
-        : 0;
+    final totalPercent = totalCount > 0
+        ? state.habits.fold<int>(
+                0, (sum, h) => sum + state.getHabitPercent(h.id)) /
+            totalCount
+        : 0.0;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -111,7 +112,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 Text('Habits',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold)),
-                Text('$percentage% completed',
+                Text('${totalPercent.round()}% completed',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
                         color: colorScheme.onSurfaceVariant)),
               ],
@@ -121,7 +122,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: totalCount > 0 ? completedCount / totalCount : 0,
+                  value: totalPercent / 100,
                   minHeight: 6,
                   backgroundColor: colorScheme.surfaceContainerHighest,
                 ),
@@ -138,13 +139,20 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               )
             else
               ...state.habits.map((habit) {
-                final isCompleted = state.isHabitCompleted(habit.id);
+                final percent = state.getHabitPercent(habit.id);
                 final streak = state.streaks[habit.id] ?? 0;
                 return _HabitTile(
                   habit: habit,
-                  isCompleted: isCompleted,
+                  percent: percent,
                   streak: streak,
                   onToggle: () => notifier.toggleHabit(habit.id),
+                  onSetPercent: () => _showPercentSlider(
+                    context,
+                    habit.name,
+                    percent,
+                    Color(habit.color),
+                    (p) => notifier.updateHabitPercent(habit.id, p),
+                  ),
                 );
               }),
           ],
@@ -155,12 +163,12 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   Widget _buildDailyGoalsCard(
       BuildContext context, TodayState state, TodayNotifier notifier) {
-    final completedCount =
-        state.dailyGoals.where((g) => state.isGoalCompleted(g.id)).length;
     final totalCount = state.dailyGoals.length;
-    final percentage = totalCount > 0
-        ? (completedCount / totalCount * 100).round()
-        : 0;
+    final totalPercent = totalCount > 0
+        ? state.dailyGoals.fold<int>(
+                0, (sum, g) => sum + state.getGoalPercent(g.id)) /
+            totalCount
+        : 0.0;
     final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
@@ -178,7 +186,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                         .titleMedium
                         ?.copyWith(fontWeight: FontWeight.bold)),
                 if (totalCount > 0)
-                  Text('$percentage% completed',
+                  Text('${totalPercent.round()}% completed',
                       style: Theme.of(context).textTheme.bodySmall?.copyWith(
                           color: colorScheme.onSurfaceVariant)),
               ],
@@ -188,7 +196,7 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               ClipRRect(
                 borderRadius: BorderRadius.circular(4),
                 child: LinearProgressIndicator(
-                  value: completedCount / totalCount,
+                  value: totalPercent / 100,
                   minHeight: 6,
                   backgroundColor: colorScheme.surfaceContainerHighest,
                 ),
@@ -205,21 +213,53 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               )
             else
               ...state.dailyGoals.map((goal) {
-                final isCompleted = state.isGoalCompleted(goal.id);
+                final percent = state.getGoalPercent(goal.id);
                 return ListTile(
                   contentPadding: EdgeInsets.zero,
                   leading: Checkbox(
-                    value: isCompleted,
+                    value: percent >= 100,
                     onChanged: (_) => notifier.toggleGoal(goal.id),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(4)),
                   ),
-                  title: Text(
-                    goal.title,
-                    style: TextStyle(
-                      color: isCompleted
-                          ? colorScheme.onSurfaceVariant
-                          : null,
+                  title: GestureDetector(
+                    onLongPress: () => _showPercentSlider(
+                      context,
+                      goal.title,
+                      percent,
+                      null,
+                      (p) => notifier.updateGoalPercent(goal.id, p),
+                    ),
+                    child: Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            goal.title,
+                            style: TextStyle(
+                              color: percent >= 100
+                                  ? colorScheme.onSurfaceVariant
+                                  : null,
+                            ),
+                          ),
+                        ),
+                        if (percent > 0 && percent < 100)
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colorScheme.primary.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                            child: Text(
+                              '$percent%',
+                              style: TextStyle(
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                                color: colorScheme.primary,
+                              ),
+                            ),
+                          ),
+                      ],
                     ),
                   ),
                   trailing: IconButton(
@@ -232,6 +272,31 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
         ),
       ),
     );
+  }
+
+  void _showPercentSlider(
+    BuildContext context,
+    String title,
+    int currentPercent,
+    Color? color,
+    ValueChanged<int> onSave,
+  ) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => PercentSliderDialog(
+        title: title,
+        initialPercent: currentPercent,
+        accentColor: color,
+      ),
+    ).then((result) {
+      if (result != null && result is int) {
+        onSave(result);
+      }
+    });
   }
 
   void _showAddOptions(BuildContext context, TodayNotifier notifier) {
@@ -255,6 +320,14 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
               onTap: () {
                 Navigator.pop(context);
                 _showAddGoalDialog(context, notifier);
+              },
+            ),
+            ListTile(
+              leading: const Icon(Icons.auto_awesome),
+              title: const Text('Browse Preset Habits'),
+              onTap: () {
+                Navigator.pop(context);
+                context.push('/presets');
               },
             ),
           ],
@@ -294,15 +367,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
 class _HabitTile extends StatelessWidget {
   final dynamic habit;
-  final bool isCompleted;
+  final int percent;
   final int streak;
   final VoidCallback onToggle;
+  final VoidCallback onSetPercent;
 
   const _HabitTile({
     required this.habit,
-    required this.isCompleted,
+    required this.percent,
     required this.streak,
     required this.onToggle,
+    required this.onSetPercent,
   });
 
   String? _getCustomSubtitle() {
@@ -332,6 +407,7 @@ class _HabitTile extends StatelessWidget {
     final color = Color(habit.color);
     final subtitle = _getCustomSubtitle();
     final colorScheme = Theme.of(context).colorScheme;
+    final isCompleted = percent >= 100;
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -345,18 +421,47 @@ class _HabitTile extends StatelessWidget {
             color: isCompleted ? color : color.withValues(alpha: 0.1),
             borderRadius: BorderRadius.circular(12),
           ),
-          child: Icon(
-            HabitIcons.getIcon(habit.icon),
-            color: isCompleted ? Colors.white : color,
-            size: 22,
-          ),
+          child: percent > 0 && !isCompleted
+              ? Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    SizedBox(
+                      width: 32,
+                      height: 32,
+                      child: CircularProgressIndicator(
+                        value: percent / 100,
+                        strokeWidth: 3,
+                        backgroundColor: color.withValues(alpha: 0.2),
+                        color: color,
+                      ),
+                    ),
+                    Text(
+                      '$percent',
+                      style: TextStyle(
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: color,
+                      ),
+                    ),
+                  ],
+                )
+              : Icon(
+                  isCompleted
+                      ? Icons.check
+                      : HabitIcons.getIcon(habit.icon),
+                  color: isCompleted ? Colors.white : color,
+                  size: 22,
+                ),
         ),
       ),
-      title: Text(
-        habit.name,
-        style: TextStyle(
-          color: isCompleted ? colorScheme.onSurfaceVariant : null,
-          fontWeight: FontWeight.w500,
+      title: GestureDetector(
+        onLongPress: onSetPercent,
+        child: Text(
+          habit.name,
+          style: TextStyle(
+            color: isCompleted ? colorScheme.onSurfaceVariant : null,
+            fontWeight: FontWeight.w500,
+          ),
         ),
       ),
       subtitle: subtitle != null
@@ -371,6 +476,28 @@ class _HabitTile extends StatelessWidget {
       trailing: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
+          // Percent badge for partial completion
+          if (percent > 0 && !isCompleted)
+            GestureDetector(
+              onTap: onSetPercent,
+              child: Container(
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+                margin: const EdgeInsets.only(right: 8),
+                decoration: BoxDecoration(
+                  color: color.withValues(alpha: 0.1),
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Text(
+                  '$percent%',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: color,
+                  ),
+                ),
+              ),
+            ),
           if (streak >= StreakThresholds.fireIcon) ...[
             const Icon(Icons.local_fire_department,
                 color: Colors.orange, size: 18),

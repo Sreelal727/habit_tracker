@@ -199,7 +199,10 @@ class $HabitsTable extends Habits with TableInfo<$HabitsTable, Habit> {
     if (data.containsKey('customization')) {
       context.handle(
         _customizationMeta,
-        customization.isAcceptableOrUnknown(data['customization']!, _customizationMeta),
+        customization.isAcceptableOrUnknown(
+          data['customization']!,
+          _customizationMeta,
+        ),
       );
     }
     if (data.containsKey('created_at')) {
@@ -651,6 +654,18 @@ class $HabitEntriesTable extends HabitEntries
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _completionPercentMeta = const VerificationMeta(
+    'completionPercent',
+  );
+  @override
+  late final GeneratedColumn<int> completionPercent = GeneratedColumn<int>(
+    'completion_percent',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _completedAtMeta = const VerificationMeta(
     'completedAt',
   );
@@ -678,6 +693,7 @@ class $HabitEntriesTable extends HabitEntries
     habitId,
     date,
     completed,
+    completionPercent,
     completedAt,
     note,
   ];
@@ -720,6 +736,15 @@ class $HabitEntriesTable extends HabitEntries
         completed.isAcceptableOrUnknown(data['completed']!, _completedMeta),
       );
     }
+    if (data.containsKey('completion_percent')) {
+      context.handle(
+        _completionPercentMeta,
+        completionPercent.isAcceptableOrUnknown(
+          data['completion_percent']!,
+          _completionPercentMeta,
+        ),
+      );
+    }
     if (data.containsKey('completed_at')) {
       context.handle(
         _completedAtMeta,
@@ -760,6 +785,10 @@ class $HabitEntriesTable extends HabitEntries
         DriftSqlType.bool,
         data['${effectivePrefix}completed'],
       )!,
+      completionPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completion_percent'],
+      )!,
       completedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
@@ -782,6 +811,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
   final String habitId;
   final DateTime date;
   final bool completed;
+  final int completionPercent;
   final DateTime? completedAt;
   final String note;
   const HabitEntry({
@@ -789,6 +819,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
     required this.habitId,
     required this.date,
     required this.completed,
+    required this.completionPercent,
     this.completedAt,
     required this.note,
   });
@@ -799,6 +830,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
     map['habit_id'] = Variable<String>(habitId);
     map['date'] = Variable<DateTime>(date);
     map['completed'] = Variable<bool>(completed);
+    map['completion_percent'] = Variable<int>(completionPercent);
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
@@ -812,6 +844,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
       habitId: Value(habitId),
       date: Value(date),
       completed: Value(completed),
+      completionPercent: Value(completionPercent),
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
@@ -829,6 +862,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
       habitId: serializer.fromJson<String>(json['habitId']),
       date: serializer.fromJson<DateTime>(json['date']),
       completed: serializer.fromJson<bool>(json['completed']),
+      completionPercent: serializer.fromJson<int>(json['completionPercent']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
       note: serializer.fromJson<String>(json['note']),
     );
@@ -841,6 +875,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
       'habitId': serializer.toJson<String>(habitId),
       'date': serializer.toJson<DateTime>(date),
       'completed': serializer.toJson<bool>(completed),
+      'completionPercent': serializer.toJson<int>(completionPercent),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
       'note': serializer.toJson<String>(note),
     };
@@ -851,6 +886,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
     String? habitId,
     DateTime? date,
     bool? completed,
+    int? completionPercent,
     Value<DateTime?> completedAt = const Value.absent(),
     String? note,
   }) => HabitEntry(
@@ -858,6 +894,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
     habitId: habitId ?? this.habitId,
     date: date ?? this.date,
     completed: completed ?? this.completed,
+    completionPercent: completionPercent ?? this.completionPercent,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
     note: note ?? this.note,
   );
@@ -867,6 +904,9 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
       habitId: data.habitId.present ? data.habitId.value : this.habitId,
       date: data.date.present ? data.date.value : this.date,
       completed: data.completed.present ? data.completed.value : this.completed,
+      completionPercent: data.completionPercent.present
+          ? data.completionPercent.value
+          : this.completionPercent,
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
@@ -881,6 +921,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
           ..write('habitId: $habitId, ')
           ..write('date: $date, ')
           ..write('completed: $completed, ')
+          ..write('completionPercent: $completionPercent, ')
           ..write('completedAt: $completedAt, ')
           ..write('note: $note')
           ..write(')'))
@@ -888,8 +929,15 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, habitId, date, completed, completedAt, note);
+  int get hashCode => Object.hash(
+    id,
+    habitId,
+    date,
+    completed,
+    completionPercent,
+    completedAt,
+    note,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -898,6 +946,7 @@ class HabitEntry extends DataClass implements Insertable<HabitEntry> {
           other.habitId == this.habitId &&
           other.date == this.date &&
           other.completed == this.completed &&
+          other.completionPercent == this.completionPercent &&
           other.completedAt == this.completedAt &&
           other.note == this.note);
 }
@@ -907,6 +956,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
   final Value<String> habitId;
   final Value<DateTime> date;
   final Value<bool> completed;
+  final Value<int> completionPercent;
   final Value<DateTime?> completedAt;
   final Value<String> note;
   final Value<int> rowid;
@@ -915,6 +965,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
     this.habitId = const Value.absent(),
     this.date = const Value.absent(),
     this.completed = const Value.absent(),
+    this.completionPercent = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.note = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -924,6 +975,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
     required String habitId,
     required DateTime date,
     this.completed = const Value.absent(),
+    this.completionPercent = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.note = const Value.absent(),
     this.rowid = const Value.absent(),
@@ -935,6 +987,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
     Expression<String>? habitId,
     Expression<DateTime>? date,
     Expression<bool>? completed,
+    Expression<int>? completionPercent,
     Expression<DateTime>? completedAt,
     Expression<String>? note,
     Expression<int>? rowid,
@@ -944,6 +997,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
       if (habitId != null) 'habit_id': habitId,
       if (date != null) 'date': date,
       if (completed != null) 'completed': completed,
+      if (completionPercent != null) 'completion_percent': completionPercent,
       if (completedAt != null) 'completed_at': completedAt,
       if (note != null) 'note': note,
       if (rowid != null) 'rowid': rowid,
@@ -955,6 +1009,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
     Value<String>? habitId,
     Value<DateTime>? date,
     Value<bool>? completed,
+    Value<int>? completionPercent,
     Value<DateTime?>? completedAt,
     Value<String>? note,
     Value<int>? rowid,
@@ -964,6 +1019,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
       habitId: habitId ?? this.habitId,
       date: date ?? this.date,
       completed: completed ?? this.completed,
+      completionPercent: completionPercent ?? this.completionPercent,
       completedAt: completedAt ?? this.completedAt,
       note: note ?? this.note,
       rowid: rowid ?? this.rowid,
@@ -985,6 +1041,9 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
     if (completed.present) {
       map['completed'] = Variable<bool>(completed.value);
     }
+    if (completionPercent.present) {
+      map['completion_percent'] = Variable<int>(completionPercent.value);
+    }
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
@@ -1004,6 +1063,7 @@ class HabitEntriesCompanion extends UpdateCompanion<HabitEntry> {
           ..write('habitId: $habitId, ')
           ..write('date: $date, ')
           ..write('completed: $completed, ')
+          ..write('completionPercent: $completionPercent, ')
           ..write('completedAt: $completedAt, ')
           ..write('note: $note, ')
           ..write('rowid: $rowid')
@@ -1468,6 +1528,18 @@ class $GoalEntriesTable extends GoalEntries
     ),
     defaultValue: const Constant(false),
   );
+  static const VerificationMeta _completionPercentMeta = const VerificationMeta(
+    'completionPercent',
+  );
+  @override
+  late final GeneratedColumn<int> completionPercent = GeneratedColumn<int>(
+    'completion_percent',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(0),
+  );
   static const VerificationMeta _completedAtMeta = const VerificationMeta(
     'completedAt',
   );
@@ -1485,6 +1557,7 @@ class $GoalEntriesTable extends GoalEntries
     goalId,
     date,
     completed,
+    completionPercent,
     completedAt,
   ];
   @override
@@ -1526,6 +1599,15 @@ class $GoalEntriesTable extends GoalEntries
         completed.isAcceptableOrUnknown(data['completed']!, _completedMeta),
       );
     }
+    if (data.containsKey('completion_percent')) {
+      context.handle(
+        _completionPercentMeta,
+        completionPercent.isAcceptableOrUnknown(
+          data['completion_percent']!,
+          _completionPercentMeta,
+        ),
+      );
+    }
     if (data.containsKey('completed_at')) {
       context.handle(
         _completedAtMeta,
@@ -1560,6 +1642,10 @@ class $GoalEntriesTable extends GoalEntries
         DriftSqlType.bool,
         data['${effectivePrefix}completed'],
       )!,
+      completionPercent: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}completion_percent'],
+      )!,
       completedAt: attachedDatabase.typeMapping.read(
         DriftSqlType.dateTime,
         data['${effectivePrefix}completed_at'],
@@ -1578,12 +1664,14 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
   final String goalId;
   final DateTime date;
   final bool completed;
+  final int completionPercent;
   final DateTime? completedAt;
   const GoalEntry({
     required this.id,
     required this.goalId,
     required this.date,
     required this.completed,
+    required this.completionPercent,
     this.completedAt,
   });
   @override
@@ -1593,6 +1681,7 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
     map['goal_id'] = Variable<String>(goalId);
     map['date'] = Variable<DateTime>(date);
     map['completed'] = Variable<bool>(completed);
+    map['completion_percent'] = Variable<int>(completionPercent);
     if (!nullToAbsent || completedAt != null) {
       map['completed_at'] = Variable<DateTime>(completedAt);
     }
@@ -1605,6 +1694,7 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
       goalId: Value(goalId),
       date: Value(date),
       completed: Value(completed),
+      completionPercent: Value(completionPercent),
       completedAt: completedAt == null && nullToAbsent
           ? const Value.absent()
           : Value(completedAt),
@@ -1621,6 +1711,7 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
       goalId: serializer.fromJson<String>(json['goalId']),
       date: serializer.fromJson<DateTime>(json['date']),
       completed: serializer.fromJson<bool>(json['completed']),
+      completionPercent: serializer.fromJson<int>(json['completionPercent']),
       completedAt: serializer.fromJson<DateTime?>(json['completedAt']),
     );
   }
@@ -1632,6 +1723,7 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
       'goalId': serializer.toJson<String>(goalId),
       'date': serializer.toJson<DateTime>(date),
       'completed': serializer.toJson<bool>(completed),
+      'completionPercent': serializer.toJson<int>(completionPercent),
       'completedAt': serializer.toJson<DateTime?>(completedAt),
     };
   }
@@ -1641,12 +1733,14 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
     String? goalId,
     DateTime? date,
     bool? completed,
+    int? completionPercent,
     Value<DateTime?> completedAt = const Value.absent(),
   }) => GoalEntry(
     id: id ?? this.id,
     goalId: goalId ?? this.goalId,
     date: date ?? this.date,
     completed: completed ?? this.completed,
+    completionPercent: completionPercent ?? this.completionPercent,
     completedAt: completedAt.present ? completedAt.value : this.completedAt,
   );
   GoalEntry copyWithCompanion(GoalEntriesCompanion data) {
@@ -1655,6 +1749,9 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
       goalId: data.goalId.present ? data.goalId.value : this.goalId,
       date: data.date.present ? data.date.value : this.date,
       completed: data.completed.present ? data.completed.value : this.completed,
+      completionPercent: data.completionPercent.present
+          ? data.completionPercent.value
+          : this.completionPercent,
       completedAt: data.completedAt.present
           ? data.completedAt.value
           : this.completedAt,
@@ -1668,13 +1765,15 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
           ..write('goalId: $goalId, ')
           ..write('date: $date, ')
           ..write('completed: $completed, ')
+          ..write('completionPercent: $completionPercent, ')
           ..write('completedAt: $completedAt')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(id, goalId, date, completed, completedAt);
+  int get hashCode =>
+      Object.hash(id, goalId, date, completed, completionPercent, completedAt);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1683,6 +1782,7 @@ class GoalEntry extends DataClass implements Insertable<GoalEntry> {
           other.goalId == this.goalId &&
           other.date == this.date &&
           other.completed == this.completed &&
+          other.completionPercent == this.completionPercent &&
           other.completedAt == this.completedAt);
 }
 
@@ -1691,6 +1791,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
   final Value<String> goalId;
   final Value<DateTime> date;
   final Value<bool> completed;
+  final Value<int> completionPercent;
   final Value<DateTime?> completedAt;
   final Value<int> rowid;
   const GoalEntriesCompanion({
@@ -1698,6 +1799,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
     this.goalId = const Value.absent(),
     this.date = const Value.absent(),
     this.completed = const Value.absent(),
+    this.completionPercent = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   });
@@ -1706,6 +1808,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
     required String goalId,
     required DateTime date,
     this.completed = const Value.absent(),
+    this.completionPercent = const Value.absent(),
     this.completedAt = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : id = Value(id),
@@ -1716,6 +1819,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
     Expression<String>? goalId,
     Expression<DateTime>? date,
     Expression<bool>? completed,
+    Expression<int>? completionPercent,
     Expression<DateTime>? completedAt,
     Expression<int>? rowid,
   }) {
@@ -1724,6 +1828,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
       if (goalId != null) 'goal_id': goalId,
       if (date != null) 'date': date,
       if (completed != null) 'completed': completed,
+      if (completionPercent != null) 'completion_percent': completionPercent,
       if (completedAt != null) 'completed_at': completedAt,
       if (rowid != null) 'rowid': rowid,
     });
@@ -1734,6 +1839,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
     Value<String>? goalId,
     Value<DateTime>? date,
     Value<bool>? completed,
+    Value<int>? completionPercent,
     Value<DateTime?>? completedAt,
     Value<int>? rowid,
   }) {
@@ -1742,6 +1848,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
       goalId: goalId ?? this.goalId,
       date: date ?? this.date,
       completed: completed ?? this.completed,
+      completionPercent: completionPercent ?? this.completionPercent,
       completedAt: completedAt ?? this.completedAt,
       rowid: rowid ?? this.rowid,
     );
@@ -1762,6 +1869,9 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
     if (completed.present) {
       map['completed'] = Variable<bool>(completed.value);
     }
+    if (completionPercent.present) {
+      map['completion_percent'] = Variable<int>(completionPercent.value);
+    }
     if (completedAt.present) {
       map['completed_at'] = Variable<DateTime>(completedAt.value);
     }
@@ -1778,6 +1888,7 @@ class GoalEntriesCompanion extends UpdateCompanion<GoalEntry> {
           ..write('goalId: $goalId, ')
           ..write('date: $date, ')
           ..write('completed: $completed, ')
+          ..write('completionPercent: $completionPercent, ')
           ..write('completedAt: $completedAt, ')
           ..write('rowid: $rowid')
           ..write(')'))
@@ -3466,6 +3577,7 @@ typedef $$HabitEntriesTableCreateCompanionBuilder =
       required String habitId,
       required DateTime date,
       Value<bool> completed,
+      Value<int> completionPercent,
       Value<DateTime?> completedAt,
       Value<String> note,
       Value<int> rowid,
@@ -3476,6 +3588,7 @@ typedef $$HabitEntriesTableUpdateCompanionBuilder =
       Value<String> habitId,
       Value<DateTime> date,
       Value<bool> completed,
+      Value<int> completionPercent,
       Value<DateTime?> completedAt,
       Value<String> note,
       Value<int> rowid,
@@ -3525,6 +3638,11 @@ class $$HabitEntriesTableFilterComposer
 
   ColumnFilters<bool> get completed => $composableBuilder(
     column: $table.completed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completionPercent => $composableBuilder(
+    column: $table.completionPercent,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -3586,6 +3704,11 @@ class $$HabitEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get completionPercent => $composableBuilder(
+    column: $table.completionPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
     builder: (column) => ColumnOrderings(column),
@@ -3637,6 +3760,11 @@ class $$HabitEntriesTableAnnotationComposer
 
   GeneratedColumn<bool> get completed =>
       $composableBuilder(column: $table.completed, builder: (column) => column);
+
+  GeneratedColumn<int> get completionPercent => $composableBuilder(
+    column: $table.completionPercent,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
@@ -3702,6 +3830,7 @@ class $$HabitEntriesTableTableManager
                 Value<String> habitId = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<bool> completed = const Value.absent(),
+                Value<int> completionPercent = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<String> note = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3710,6 +3839,7 @@ class $$HabitEntriesTableTableManager
                 habitId: habitId,
                 date: date,
                 completed: completed,
+                completionPercent: completionPercent,
                 completedAt: completedAt,
                 note: note,
                 rowid: rowid,
@@ -3720,6 +3850,7 @@ class $$HabitEntriesTableTableManager
                 required String habitId,
                 required DateTime date,
                 Value<bool> completed = const Value.absent(),
+                Value<int> completionPercent = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<String> note = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
@@ -3728,6 +3859,7 @@ class $$HabitEntriesTableTableManager
                 habitId: habitId,
                 date: date,
                 completed: completed,
+                completionPercent: completionPercent,
                 completedAt: completedAt,
                 note: note,
                 rowid: rowid,
@@ -4116,6 +4248,7 @@ typedef $$GoalEntriesTableCreateCompanionBuilder =
       required String goalId,
       required DateTime date,
       Value<bool> completed,
+      Value<int> completionPercent,
       Value<DateTime?> completedAt,
       Value<int> rowid,
     });
@@ -4125,6 +4258,7 @@ typedef $$GoalEntriesTableUpdateCompanionBuilder =
       Value<String> goalId,
       Value<DateTime> date,
       Value<bool> completed,
+      Value<int> completionPercent,
       Value<DateTime?> completedAt,
       Value<int> rowid,
     });
@@ -4173,6 +4307,11 @@ class $$GoalEntriesTableFilterComposer
 
   ColumnFilters<bool> get completed => $composableBuilder(
     column: $table.completed,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get completionPercent => $composableBuilder(
+    column: $table.completionPercent,
     builder: (column) => ColumnFilters(column),
   );
 
@@ -4229,6 +4368,11 @@ class $$GoalEntriesTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<int> get completionPercent => $composableBuilder(
+    column: $table.completionPercent,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
     builder: (column) => ColumnOrderings(column),
@@ -4275,6 +4419,11 @@ class $$GoalEntriesTableAnnotationComposer
 
   GeneratedColumn<bool> get completed =>
       $composableBuilder(column: $table.completed, builder: (column) => column);
+
+  GeneratedColumn<int> get completionPercent => $composableBuilder(
+    column: $table.completionPercent,
+    builder: (column) => column,
+  );
 
   GeneratedColumn<DateTime> get completedAt => $composableBuilder(
     column: $table.completedAt,
@@ -4337,6 +4486,7 @@ class $$GoalEntriesTableTableManager
                 Value<String> goalId = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<bool> completed = const Value.absent(),
+                Value<int> completionPercent = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GoalEntriesCompanion(
@@ -4344,6 +4494,7 @@ class $$GoalEntriesTableTableManager
                 goalId: goalId,
                 date: date,
                 completed: completed,
+                completionPercent: completionPercent,
                 completedAt: completedAt,
                 rowid: rowid,
               ),
@@ -4353,6 +4504,7 @@ class $$GoalEntriesTableTableManager
                 required String goalId,
                 required DateTime date,
                 Value<bool> completed = const Value.absent(),
+                Value<int> completionPercent = const Value.absent(),
                 Value<DateTime?> completedAt = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => GoalEntriesCompanion.insert(
@@ -4360,6 +4512,7 @@ class $$GoalEntriesTableTableManager
                 goalId: goalId,
                 date: date,
                 completed: completed,
+                completionPercent: completionPercent,
                 completedAt: completedAt,
                 rowid: rowid,
               ),

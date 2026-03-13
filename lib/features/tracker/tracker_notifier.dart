@@ -10,12 +10,14 @@ const _uuid = Uuid();
 class TrackerState {
   final List<Habit> habits;
   final Map<String, Map<DateTime, bool>> entries; // habitId -> date -> completed
+  final Map<String, Map<DateTime, int>> percents; // habitId -> date -> percent
   final int daysToShow;
   final bool isLoading;
 
   const TrackerState({
     this.habits = const [],
     this.entries = const {},
+    this.percents = const {},
     this.daysToShow = 30,
     this.isLoading = true,
   });
@@ -23,12 +25,14 @@ class TrackerState {
   TrackerState copyWith({
     List<Habit>? habits,
     Map<String, Map<DateTime, bool>>? entries,
+    Map<String, Map<DateTime, int>>? percents,
     int? daysToShow,
     bool? isLoading,
   }) {
     return TrackerState(
       habits: habits ?? this.habits,
       entries: entries ?? this.entries,
+      percents: percents ?? this.percents,
       daysToShow: daysToShow ?? this.daysToShow,
       isLoading: isLoading ?? this.isLoading,
     );
@@ -36,6 +40,10 @@ class TrackerState {
 
   bool isCompleted(String habitId, DateTime date) {
     return entries[habitId]?[DateTime(date.year, date.month, date.day)] ?? false;
+  }
+
+  int getPercent(String habitId, DateTime date) {
+    return percents[habitId]?[DateTime(date.year, date.month, date.day)] ?? 0;
   }
 }
 
@@ -59,21 +67,31 @@ class TrackerNotifier extends StateNotifier<TrackerState> {
     final allEntries = await _habitEntryDao.getEntriesForRange(start, end);
 
     final Map<String, Map<DateTime, bool>> entriesMap = {};
+    final Map<String, Map<DateTime, int>> percentsMap = {};
     for (final entry in allEntries) {
       final date = DateTime(entry.date.year, entry.date.month, entry.date.day);
       entriesMap.putIfAbsent(entry.habitId, () => {});
       entriesMap[entry.habitId]![date] = entry.completed;
+      percentsMap.putIfAbsent(entry.habitId, () => {});
+      percentsMap[entry.habitId]![date] = entry.completionPercent;
     }
 
     state = state.copyWith(
       habits: habits,
       entries: entriesMap,
+      percents: percentsMap,
       isLoading: false,
     );
   }
 
   Future<void> toggleEntry(String habitId, DateTime date) async {
     await _habitEntryDao.toggleEntry(_uuid.v4(), habitId, date);
+    await load();
+  }
+
+  Future<void> updatePercent(String habitId, DateTime date, int percent) async {
+    await _habitEntryDao.updateCompletionPercent(
+        _uuid.v4(), habitId, date, percent);
     await load();
   }
 }

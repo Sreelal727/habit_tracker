@@ -55,6 +55,14 @@ class GoalsState {
   bool isYearlyGoalCompleted(String goalId) {
     return yearlyEntries[goalId]?.completed ?? false;
   }
+
+  int getWeeklyGoalPercent(String goalId) {
+    return weeklyEntries[goalId]?.completionPercent ?? 0;
+  }
+
+  int getYearlyGoalPercent(String goalId) {
+    return yearlyEntries[goalId]?.completionPercent ?? 0;
+  }
 }
 
 class GoalsNotifier extends StateNotifier<GoalsState> {
@@ -119,6 +127,19 @@ class GoalsNotifier extends StateNotifier<GoalsState> {
 
   Future<void> deleteGoal(String id) async {
     await _goalDao.deleteGoal(id);
+    await load();
+  }
+
+  Future<void> updateWeeklyGoalPercent(String goalId, int percent) async {
+    await _goalEntryDao.updateCompletionPercent(
+        const Uuid().v4(), goalId, state.currentWeekStart, percent);
+    await load();
+  }
+
+  Future<void> updateYearlyGoalPercent(String goalId, int percent) async {
+    final yearStart = DateTime(DateTime.now().year, 1, 1);
+    await _goalEntryDao.updateCompletionPercent(
+        const Uuid().v4(), goalId, yearStart, percent);
     await load();
   }
 

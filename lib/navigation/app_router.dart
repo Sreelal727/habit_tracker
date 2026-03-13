@@ -134,6 +134,12 @@ final routerProvider = Provider<GoRouter>((ref) {
         ],
       ),
       GoRoute(
+        path: '/presets',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            const HabitSelectionScreen(isOnboarding: false),
+      ),
+      GoRoute(
         path: '/settings',
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const SettingsScreen(),

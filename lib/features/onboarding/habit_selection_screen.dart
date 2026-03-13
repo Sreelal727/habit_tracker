@@ -12,7 +12,9 @@ import '../../providers/app_providers.dart';
 const _uuid = Uuid();
 
 class HabitSelectionScreen extends ConsumerStatefulWidget {
-  const HabitSelectionScreen({super.key});
+  final bool isOnboarding;
+
+  const HabitSelectionScreen({super.key, this.isOnboarding = true});
 
   @override
   ConsumerState<HabitSelectionScreen> createState() =>
@@ -23,6 +25,27 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
   final Map<String, Map<String, dynamic>> _selectedHabits = {};
   String _activeCategory = PresetHabits.categories.first;
   bool _isSaving = false;
+  Set<String> _existingHabitPresetIds = {};
+
+  @override
+  void initState() {
+    super.initState();
+    if (!widget.isOnboarding) {
+      _loadExistingHabits();
+    }
+  }
+
+  Future<void> _loadExistingHabits() async {
+    final habitDao = ref.read(habitDaoProvider);
+    final habits = await habitDao.getActiveHabits();
+    final existingIcons = habits.map((h) => h.icon).toSet();
+    setState(() {
+      _existingHabitPresetIds = PresetHabits.all
+          .where((p) => existingIcons.contains(p.icon))
+          .map((p) => p.id)
+          .toSet();
+    });
+  }
 
   void _toggleHabit(PresetHabit preset) {
     setState(() {
@@ -61,7 +84,11 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
   Future<void> _saveAndContinue() async {
     if (_selectedHabits.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please select at least one habit')),
+        SnackBar(
+          content: Text(widget.isOnboarding
+              ? 'Please select at least one habit'
+              : 'Please select at least one habit to add'),
+        ),
       );
       return;
     }
@@ -69,9 +96,14 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
     setState(() => _isSaving = true);
 
     final habitDao = ref.read(habitDaoProvider);
-    final settingsDao = ref.read(userSettingsDaoProvider);
 
+    // Get current max sort order for non-onboarding mode
     int sortOrder = 0;
+    if (!widget.isOnboarding) {
+      final existing = await habitDao.getActiveHabits();
+      sortOrder = existing.length;
+    }
+
     for (final entry in _selectedHabits.entries) {
       final preset = PresetHabits.all.firstWhere((p) => p.id == entry.key);
       final customization = entry.value;
@@ -90,11 +122,18 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
       sortOrder++;
     }
 
-    await settingsDao.setBool('habits_seeded', true);
-    await settingsDao.setBool('onboarding_complete', true);
+    if (widget.isOnboarding) {
+      final settingsDao = ref.read(userSettingsDaoProvider);
+      await settingsDao.setBool('habits_seeded', true);
+      await settingsDao.setBool('onboarding_complete', true);
 
-    if (mounted) {
-      context.go('/today');
+      if (mounted) {
+        context.go('/today');
+      }
+    } else {
+      if (mounted) {
+        Navigator.of(context).pop();
+      }
     }
   }
 
@@ -155,9 +194,19 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
   @override
   Widget build(BuildContext context) {
     final theme = Theme.of(context);
-    final categoryHabits = PresetHabits.byCategory(_activeCategory);
+    final allCategoryHabits = PresetHabits.byCategory(_activeCategory);
+    final categoryHabits = widget.isOnboarding
+        ? allCategoryHabits
+        : allCategoryHabits
+            .where((p) => !_existingHabitPresetIds.contains(p.id))
+            .toList();
 
     return Scaffold(
+      appBar: widget.isOnboarding
+          ? null
+          : AppBar(
+              title: const Text('Browse Preset Habits'),
+            ),
       body: SafeArea(
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -168,15 +217,18 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(
-                    'Choose Your Habits',
-                    style: theme.textTheme.headlineSmall?.copyWith(
-                      fontWeight: FontWeight.bold,
+                  if (widget.isOnboarding)
+                    Text(
+                      'Choose Your Habits',
+                      style: theme.textTheme.headlineSmall?.copyWith(
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
-                  ),
                   const SizedBox(height: 4),
                   Text(
-                    'Select habits you want to build. Tap the settings icon to customize each one.',
+                    widget.isOnboarding
+                        ? 'Select habits you want to build. Tap the settings icon to customize each one.'
+                        : 'Select new habits to add. Already added habits are hidden.',
                     style: theme.textTheme.bodyMedium?.copyWith(
                       color: theme.colorScheme.onSurfaceVariant,
                     ),
@@ -271,8 +323,12 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : const Icon(Icons.arrow_forward),
-                    label: const Text('Continue'),
+                        : Icon(widget.isOnboarding
+                            ? Icons.arrow_forward
+                            : Icons.add),
+                    label: Text(widget.isOnboarding
+                        ? 'Continue'
+                        : 'Add Selected'),
                     style: FilledButton.styleFrom(
                       backgroundColor: AppColors.primary,
                       padding: const EdgeInsets.symmetric(
@@ -689,7 +745,7 @@ class _CustomizationSheetState extends State<_CustomizationSheet> {
                 },
                 selectedColor: color,
                 labelStyle: TextStyle(
-                  color: isActive ? Colors.white : Colors.grey[700],
+                  color: isActive ? Colors.white : Theme.of(context).colorScheme.onSurfaceVariant,
                   fontWeight:
                       isActive ? FontWeight.w600 : FontWeight.normal,
                 ),

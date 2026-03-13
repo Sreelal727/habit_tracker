@@ -34,6 +34,7 @@ class GoalEntryDao extends DatabaseAccessor<AppDatabase>
               ..where((e) => e.id.equals(existing.id)))
             .write(const GoalEntriesCompanion(
           completed: Value(false),
+          completionPercent: Value(0),
           completedAt: Value(null),
         ));
       } else {
@@ -41,6 +42,7 @@ class GoalEntryDao extends DatabaseAccessor<AppDatabase>
               ..where((e) => e.id.equals(existing.id)))
             .write(GoalEntriesCompanion(
           completed: const Value(true),
+          completionPercent: const Value(100),
           completedAt: Value(DateTime.now()),
         ));
       }
@@ -50,7 +52,37 @@ class GoalEntryDao extends DatabaseAccessor<AppDatabase>
         goalId: goalId,
         date: d,
         completed: const Value(true),
+        completionPercent: const Value(100),
         completedAt: Value(DateTime.now()),
+      ));
+    }
+  }
+
+  Future<void> updateCompletionPercent(
+      String id, String goalId, DateTime date, int percent) async {
+    final d = _dateOnly(date);
+    final clamped = percent.clamp(0, 100);
+    final isCompleted = clamped >= 100;
+    final existing = await (select(goalEntries)
+          ..where((e) => e.goalId.equals(goalId) & e.date.equals(d)))
+        .getSingleOrNull();
+
+    if (existing != null) {
+      await (update(goalEntries)
+            ..where((e) => e.id.equals(existing.id)))
+          .write(GoalEntriesCompanion(
+        completed: Value(isCompleted),
+        completionPercent: Value(clamped),
+        completedAt: Value(isCompleted ? DateTime.now() : null),
+      ));
+    } else {
+      await into(goalEntries).insert(GoalEntriesCompanion.insert(
+        id: id,
+        goalId: goalId,
+        date: d,
+        completed: Value(isCompleted),
+        completionPercent: Value(clamped),
+        completedAt: Value(isCompleted ? DateTime.now() : null),
       ));
     }
   }

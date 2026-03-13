@@ -53,6 +53,14 @@ class TodayState {
   bool isGoalCompleted(String goalId) {
     return goalEntries[goalId]?.completed ?? false;
   }
+
+  int getHabitPercent(String habitId) {
+    return habitEntries[habitId]?.completionPercent ?? 0;
+  }
+
+  int getGoalPercent(String goalId) {
+    return goalEntries[goalId]?.completionPercent ?? 0;
+  }
 }
 
 class TodayNotifier extends StateNotifier<TodayState> {
@@ -129,6 +137,20 @@ class TodayNotifier extends StateNotifier<TodayState> {
 
   Future<void> toggleGoal(String goalId) async {
     await _goalEntryDao.toggleEntry(_uuid.v4(), goalId, DateTime.now());
+  }
+
+  Future<void> updateHabitPercent(String habitId, int percent) async {
+    await _habitEntryDao.updateCompletionPercent(
+        _uuid.v4(), habitId, DateTime.now(), percent);
+    final streak = await _habitEntryDao.getConsecutiveDays(habitId);
+    state = state.copyWith(
+      streaks: {...state.streaks, habitId: streak},
+    );
+  }
+
+  Future<void> updateGoalPercent(String goalId, int percent) async {
+    await _goalEntryDao.updateCompletionPercent(
+        _uuid.v4(), goalId, DateTime.now(), percent);
   }
 
   Future<void> addHabit(String name, String icon, int color) async {
