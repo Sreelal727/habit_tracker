@@ -1,6 +1,7 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:supabase_flutter/supabase_flutter.dart';
 import 'milestone_model.dart';
+import '../coins/coins_notifier.dart';
 
 class MilestoneState {
   final List<MilestoneDefinition> definitions;
@@ -60,8 +61,10 @@ class MilestoneState {
 
 class MilestoneNotifier extends StateNotifier<MilestoneState> {
   final SupabaseClient _client;
+  final CoinsNotifier _coinsNotifier;
 
-  MilestoneNotifier(this._client) : super(const MilestoneState()) {
+  MilestoneNotifier(this._client, this._coinsNotifier)
+      : super(const MilestoneState()) {
     loadAll();
   }
 
@@ -127,9 +130,17 @@ class MilestoneNotifier extends StateNotifier<MilestoneState> {
           .eq('user_id', _userId)
           .eq('milestone_id', milestoneId);
 
+      // Credit coins to local balance
+      final def = milestone.definition;
+      if (def != null && def.coinReward > 0) {
+        await _coinsNotifier.addCoins(
+          def.coinReward,
+          reason: 'Milestone: ${def.name}',
+        );
+      }
+
       // Update local state
       final updatedProgress = Map<String, UserMilestone>.from(state.progress);
-      final def = milestone.definition;
       updatedProgress[milestoneId] = UserMilestone(
         id: milestone.id,
         userId: milestone.userId,
@@ -159,5 +170,8 @@ class MilestoneNotifier extends StateNotifier<MilestoneState> {
 
 final milestoneProvider =
     StateNotifierProvider<MilestoneNotifier, MilestoneState>((ref) {
-  return MilestoneNotifier(Supabase.instance.client);
+  return MilestoneNotifier(
+    Supabase.instance.client,
+    ref.read(coinsProvider.notifier),
+  );
 });

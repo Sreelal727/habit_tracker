@@ -163,6 +163,25 @@ class CoinsNotifier extends StateNotifier<CoinsState> {
     return true;
   }
 
+  /// Adds coins from an external source (e.g. milestone reward, proof approval).
+  Future<void> addCoins(int amount, {required String reason}) async {
+    if (amount <= 0) return;
+
+    final newBalance = state.coinBalance + amount;
+
+    await _settingsDao.setValue('coin_balance', newBalance.toString());
+
+    await _coinDao.insertTransaction(CoinTransactionsCompanion(
+      id: Value(_uuid.v4()),
+      amount: Value(amount),
+      type: const Value('reward'),
+      description: Value(reason),
+      createdAt: Value(DateTime.now()),
+    ));
+
+    state = state.copyWith(coinBalance: newBalance);
+  }
+
   bool isFeatureUnlocked(String featureKey) {
     return state.unlockedFeatures.contains(featureKey);
   }
