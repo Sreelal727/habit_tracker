@@ -4,10 +4,13 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'today_notifier.dart';
+import 'group_today_notifier.dart';
 import '../../config/constants.dart';
 import '../../config/theme/app_colors.dart';
 import '../../features/coins/coins_notifier.dart';
 import '../../features/coins/daily_reward_dialog.dart';
+import '../../features/proofs/proof_notifier.dart';
+import '../../features/proofs/proof_submission_screen.dart';
 import '../../shared/widgets/add_habit_dialog.dart';
 import '../../shared/widgets/add_goal_dialog.dart';
 import '../../shared/widgets/percent_slider_dialog.dart';
@@ -27,6 +30,8 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final state = ref.watch(todayProvider);
     final notifier = ref.read(todayProvider.notifier);
     final coinsState = ref.watch(coinsProvider);
+    final groupTodayState = ref.watch(groupTodayProvider);
+    final pendingCount = ref.watch(pendingValidationCountProvider);
     final today = DateTime.now();
     final dateStr = DateFormat('EEEE, MMMM d').format(today);
 
@@ -78,9 +83,21 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
           : ListView(
               padding: const EdgeInsets.all(16),
               children: [
+                // Pending validations banner
+                if (pendingCount > 0)
+                  _PendingValidationBanner(
+                    count: pendingCount,
+                    onTap: () => context.push('/validation-queue'),
+                  ),
                 _buildHabitsCard(context, state, notifier),
                 const SizedBox(height: 16),
                 _buildDailyGoalsCard(context, state, notifier),
+                // Group habits card
+                if (!groupTodayState.isLoading &&
+                    groupTodayState.items.isNotEmpty) ...[
+                  const SizedBox(height: 16),
+                  _buildGroupHabitsCard(context, groupTodayState),
+                ],
               ],
             ),
       floatingActionButton: FloatingActionButton(
@@ -268,6 +285,60 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   ),
                 );
               }),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildGroupHabitsCard(
+      BuildContext context, GroupTodayState groupState) {
+    final colorScheme = Theme.of(context).colorScheme;
+    final totalCount = groupState.totalItems;
+    final completedCount = groupState.completedItems;
+    final totalPercent =
+        totalCount > 0 ? (completedCount / totalCount * 100) : 0.0;
+
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
+                  children: [
+                    const Icon(Icons.groups, size: 20, color: AppColors.primary),
+                    const SizedBox(width: 8),
+                    Text('Group Habits',
+                        style: Theme.of(context)
+                            .textTheme
+                            .titleMedium
+                            ?.copyWith(fontWeight: FontWeight.bold)),
+                  ],
+                ),
+                Text('$completedCount/$totalCount done',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant)),
+              ],
+            ),
+            if (totalCount > 0) ...[
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: totalPercent / 100,
+                  minHeight: 6,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                  valueColor:
+                      const AlwaysStoppedAnimation<Color>(AppColors.primary),
+                ),
+              ),
+            ],
+            const SizedBox(height: 12),
+            ...groupState.items.map((gItem) => _GroupHabitTile(item: gItem)),
           ],
         ),
       ),
@@ -510,6 +581,248 @@ class _HabitTile extends StatelessWidget {
                     .bodySmall
                     ?.copyWith(color: colorScheme.onSurfaceVariant)),
         ],
+      ),
+    );
+  }
+}
+
+class _PendingValidationBanner extends StatelessWidget {
+  final int count;
+  final VoidCallback onTap;
+
+  const _PendingValidationBanner({
+    required this.count,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Material(
+        color: AppColors.primary.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(12),
+        child: InkWell(
+          onTap: onTap,
+          borderRadius: BorderRadius.circular(12),
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+            child: Row(
+              children: [
+                Container(
+                  width: 36,
+                  height: 36,
+                  decoration: BoxDecoration(
+                    color: AppColors.primary,
+                    borderRadius: BorderRadius.circular(10),
+                  ),
+                  child: Center(
+                    child: Text(
+                      '$count',
+                      style: const TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Pending Validations',
+                        style: Theme.of(context).textTheme.titleSmall?.copyWith(
+                              fontWeight: FontWeight.w600,
+                            ),
+                      ),
+                      Text(
+                        '$count proof${count > 1 ? 's' : ''} waiting for your review',
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: Theme.of(context)
+                                  .colorScheme
+                                  .onSurfaceVariant,
+                            ),
+                      ),
+                    ],
+                  ),
+                ),
+                const Icon(Icons.chevron_right, color: AppColors.primary),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}
+
+class _GroupHabitTile extends ConsumerWidget {
+  final GroupTodayItem item;
+
+  const _GroupHabitTile({required this.item});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final color = Color(item.item.color);
+    final colorScheme = Theme.of(context).colorScheme;
+    final isComplete = item.isComplete;
+
+    return ListTile(
+      contentPadding: EdgeInsets.zero,
+      leading: Container(
+        width: 44,
+        height: 44,
+        decoration: BoxDecoration(
+          color: isComplete ? color : color.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Icon(
+          isComplete ? Icons.check : HabitIcons.getIcon(item.item.icon),
+          color: isComplete ? Colors.white : color,
+          size: 22,
+        ),
+      ),
+      title: Text(
+        item.item.title,
+        style: TextStyle(
+          color: isComplete ? colorScheme.onSurfaceVariant : null,
+          fontWeight: FontWeight.w500,
+        ),
+      ),
+      subtitle: Text(
+        item.groupName,
+        style: Theme.of(context)
+            .textTheme
+            .bodySmall
+            ?.copyWith(color: colorScheme.onSurfaceVariant),
+      ),
+      trailing: _buildTrailing(context, ref, color, colorScheme),
+    );
+  }
+
+  Widget _buildTrailing(
+    BuildContext context,
+    WidgetRef ref,
+    Color color,
+    ColorScheme colorScheme,
+  ) {
+    // Proof approved or no proof required and complete
+    if (item.isComplete) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.success.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: const Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(Icons.check_circle, size: 14, color: AppColors.success),
+            SizedBox(width: 4),
+            Text(
+              'Done',
+              style: TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.success,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Proof pending
+    if (item.proofPending) {
+      return Container(
+        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+        decoration: BoxDecoration(
+          color: AppColors.secondary.withValues(alpha: 0.1),
+          borderRadius: BorderRadius.circular(10),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            const Icon(Icons.hourglass_top,
+                size: 14, color: AppColors.secondary),
+            const SizedBox(width: 4),
+            Text(
+              '${item.myProof!.votesApprove}/${item.myProof!.quorumSize}',
+              style: const TextStyle(
+                fontSize: 12,
+                fontWeight: FontWeight.w600,
+                color: AppColors.secondary,
+              ),
+            ),
+          ],
+        ),
+      );
+    }
+
+    // Proof rejected — can resubmit
+    if (item.proofRejected) {
+      return TextButton.icon(
+        onPressed: () => _showProofSheet(context),
+        icon: const Icon(Icons.refresh, size: 16),
+        label: const Text('Resubmit', style: TextStyle(fontSize: 12)),
+        style: TextButton.styleFrom(
+          foregroundColor: AppColors.error,
+          padding: const EdgeInsets.symmetric(horizontal: 8),
+        ),
+      );
+    }
+
+    // Needs proof submission
+    if (item.needsProof) {
+      return FilledButton.tonalIcon(
+        onPressed: () => _showProofSheet(context),
+        icon: const Icon(Icons.camera_alt, size: 16),
+        label: const Text('Prove', style: TextStyle(fontSize: 12)),
+        style: FilledButton.styleFrom(
+          backgroundColor: color.withValues(alpha: 0.1),
+          foregroundColor: color,
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          minimumSize: Size.zero,
+          tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+        ),
+      );
+    }
+
+    // No proof required, not complete — show percent
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.1),
+        borderRadius: BorderRadius.circular(10),
+      ),
+      child: Text(
+        '${item.myPercent}%',
+        style: TextStyle(
+          fontSize: 12,
+          fontWeight: FontWeight.w600,
+          color: color,
+        ),
+      ),
+    );
+  }
+
+  void _showProofSheet(BuildContext context) {
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (_) => ProofSubmissionSheet(
+        groupId: item.item.groupId,
+        itemId: item.item.id,
+        itemTitle: item.item.title,
+        proofType: item.item.proofType,
+        proofDescription: item.item.proofDescription,
+        accentColor: Color(item.item.color),
       ),
     );
   }
