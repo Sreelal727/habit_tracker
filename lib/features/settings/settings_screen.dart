@@ -1,4 +1,4 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -11,7 +11,7 @@ class SettingsScreen extends ConsumerWidget {
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
-    final user = FirebaseAuth.instance.currentUser;
+    final user = Supabase.instance.client.auth.currentUser;
     final coinsState = ref.watch(coinsProvider);
 
     return Scaffold(
@@ -31,12 +31,12 @@ class SettingsScreen extends ConsumerWidget {
                 CircleAvatar(
                   radius: 28,
                   backgroundColor: AppColors.primary,
-                  backgroundImage: user?.photoURL != null
-                      ? NetworkImage(user!.photoURL!)
+                  backgroundImage: user?.userMetadata?['avatar_url'] != null
+                      ? NetworkImage(user!.userMetadata!['avatar_url'] as String)
                       : null,
-                  child: user?.photoURL == null
+                  child: user?.userMetadata?['avatar_url'] == null
                       ? Text(
-                          (user?.displayName ?? user?.email ?? '?')
+                          (user?.userMetadata?['display_name'] as String? ?? user?.email ?? '?')
                               .substring(0, 1)
                               .toUpperCase(),
                           style: const TextStyle(
@@ -53,7 +53,7 @@ class SettingsScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        user?.displayName ?? 'User',
+                        user?.userMetadata?['display_name'] as String? ?? 'User',
                         style: const TextStyle(
                           fontWeight: FontWeight.bold,
                           fontSize: 16,
@@ -102,6 +102,24 @@ class SettingsScreen extends ConsumerWidget {
             subtitle: const Text('Spend coins on themes and features'),
             trailing: const Icon(Icons.chevron_right),
             onTap: () => context.push('/settings/shop'),
+          ),
+          const Divider(),
+          // Milestones
+          ListTile(
+            leading: const Icon(Icons.emoji_events, color: AppColors.secondary),
+            title: const Text('Milestones'),
+            subtitle: const Text('Track your achievements and earn rewards'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/milestones'),
+          ),
+          const Divider(),
+          // Validation Queue
+          ListTile(
+            leading: const Icon(Icons.verified_user, color: AppColors.primary),
+            title: const Text('Validation Queue'),
+            subtitle: const Text('Review proof submissions from group members'),
+            trailing: const Icon(Icons.chevron_right),
+            onTap: () => context.push('/validation-queue'),
           ),
           const Divider(),
           ListTile(

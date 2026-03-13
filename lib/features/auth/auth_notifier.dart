@@ -1,6 +1,6 @@
-import 'package:firebase_auth/firebase_auth.dart';
+import 'dart:async';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:google_sign_in/google_sign_in.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 
 class AuthState {
   final bool isLoading;
@@ -29,142 +29,93 @@ class AuthState {
 }
 
 class AuthNotifier extends StateNotifier<AuthState> {
-  final FirebaseAuth _auth;
+  final SupabaseClient _client;
+  late final StreamSubscription<AuthState> _sub;
 
-  AuthNotifier(this._auth) : super(const AuthState()) {
-    _auth.authStateChanges().listen((user) {
-      state = state.copyWith(user: user, clearUser: user == null, isLoading: false);
+  AuthNotifier(this._client) : super(AuthState(user: _client.auth.currentUser)) {
+    _client.auth.onAuthStateChange.listen((data) {
+      state = state.copyWith(
+        user: data.session?.user,
+        clearUser: data.session?.user == null,
+        isLoading: false,
+      );
     });
   }
 
   Future<void> signInWithGoogle() async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final googleUser = await GoogleSignIn().signIn();
-      if (googleUser == null) {
-        state = state.copyWith(isLoading: false);
-        return;
+      final success = await _client.auth.signInWithOAuth(
+        OAuthProvider.google,
+        redirectTo: 'io.supabase.habittracker://login-callback/',
+      );
+      if (!success) {
+        state = state.copyWith(isLoading: false, errorMessage: 'Google sign-in was cancelled');
       }
-
-      final googleAuth = await googleUser.authentication;
-      final credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth.accessToken,
-        idToken: googleAuth.idToken,
-      );
-
-      await _auth.signInWithCredential(credential);
-    } on FirebaseAuthException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: e.message ?? 'Google sign-in failed',
-      );
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Google sign-in failed. Please try again.',
-      );
+      state = state.copyWith(isLoading: false, errorMessage: 'Google sign-in failed. Please try again.');
     }
   }
 
   Future<void> signInWithEmail(String email, String password) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      await _auth.signInWithEmailAndPassword(
+      await _client.auth.signInWithPassword(
         email: email.trim(),
         password: password,
       );
-    } on FirebaseAuthException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _getErrorMessage(e.code),
-      );
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Sign-in failed. Please try again.',
-      );
+      state = state.copyWith(isLoading: false, errorMessage: 'Sign-in failed. Please try again.');
     }
   }
 
-  Future<void> signUpWithEmail(
-      String email, String password, String displayName) async {
+  Future<void> signUpWithEmail(String email, String password, String displayName) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      final userCredential = await _auth.createUserWithEmailAndPassword(
+      await _client.auth.signUp(
         email: email.trim(),
         password: password,
+        data: {'display_name': displayName.trim()},
       );
-      await userCredential.user?.updateDisplayName(displayName.trim());
-      await userCredential.user?.reload();
-      state = state.copyWith(user: _auth.currentUser);
-    } on FirebaseAuthException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _getErrorMessage(e.code),
-      );
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Sign-up failed. Please try again.',
-      );
+      state = state.copyWith(isLoading: false, errorMessage: 'Sign-up failed. Please try again.');
     }
   }
 
   Future<void> sendPasswordReset(String email) async {
     state = state.copyWith(isLoading: true, clearError: true);
     try {
-      await _auth.sendPasswordResetEmail(email: email.trim());
+      await _client.auth.resetPasswordForEmail(email.trim());
       state = state.copyWith(isLoading: false);
-    } on FirebaseAuthException catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: _getErrorMessage(e.code),
-      );
+    } on AuthException catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: e.message);
     } catch (e) {
-      state = state.copyWith(
-        isLoading: false,
-        errorMessage: 'Failed to send reset email.',
-      );
+      state = state.copyWith(isLoading: false, errorMessage: 'Failed to send reset email.');
     }
   }
 
   Future<void> signOut() async {
-    await GoogleSignIn().signOut();
-    await _auth.signOut();
-    state = const AuthState();
+    state = state.copyWith(isLoading: true);
+    try {
+      await _client.auth.signOut();
+      state = const AuthState();
+    } catch (e) {
+      state = state.copyWith(isLoading: false, errorMessage: 'Sign-out failed.');
+    }
   }
 
   void clearError() {
     state = state.copyWith(clearError: true);
   }
-
-  String _getErrorMessage(String code) {
-    switch (code) {
-      case 'user-not-found':
-        return 'No account found with this email.';
-      case 'wrong-password':
-        return 'Incorrect password.';
-      case 'email-already-in-use':
-        return 'An account already exists with this email.';
-      case 'weak-password':
-        return 'Password must be at least 6 characters.';
-      case 'invalid-email':
-        return 'Please enter a valid email address.';
-      case 'too-many-requests':
-        return 'Too many attempts. Please try again later.';
-      case 'network-request-failed':
-        return 'Network error. Check your connection.';
-      default:
-        return 'Something went wrong. Please try again.';
-    }
-  }
 }
 
 final authNotifierProvider =
     StateNotifierProvider<AuthNotifier, AuthState>((ref) {
-  return AuthNotifier(FirebaseAuth.instance);
-});
-
-final authStateProvider = StreamProvider<User?>((ref) {
-  return FirebaseAuth.instance.authStateChanges();
+  return AuthNotifier(Supabase.instance.client);
 });

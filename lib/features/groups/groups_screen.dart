@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
 import 'groups_notifier.dart';
+import 'group_model.dart';
 import 'create_group_dialog.dart';
 import 'join_group_dialog.dart';
 
@@ -149,7 +150,8 @@ class GroupsScreen extends ConsumerWidget {
           '1. Create a group and share the 6-character invite code with friends.\n\n'
           '2. Friends join using your code.\n\n'
           '3. Add shared habits or goals to the group.\n\n'
-          '4. Everyone logs their own progress — see how the whole group is doing!',
+          '4. Everyone logs their own progress — see how the whole group is doing!\n\n'
+          '5. Items can require proof (photo, screenshot, text, or numeric) for accountability.',
         ),
         actions: [
           TextButton(
@@ -163,7 +165,7 @@ class GroupsScreen extends ConsumerWidget {
 }
 
 class _GroupCard extends StatelessWidget {
-  final dynamic group;
+  final Group group;
   final VoidCallback onTap;
   final VoidCallback onLeave;
 
@@ -176,7 +178,7 @@ class _GroupCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final colorScheme = Theme.of(context).colorScheme;
-    final memberCount = (group.members as Map).length;
+    final memberCount = group.members.length;
 
     return Card(
       margin: const EdgeInsets.only(bottom: 12),
@@ -213,6 +215,18 @@ class _GroupCard extends StatelessWidget {
                           .titleMedium
                           ?.copyWith(fontWeight: FontWeight.bold),
                     ),
+                    if (group.description != null &&
+                        group.description!.isNotEmpty) ...[
+                      const SizedBox(height: 2),
+                      Text(
+                        group.description!,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                              color: colorScheme.onSurfaceVariant,
+                            ),
+                      ),
+                    ],
                     const SizedBox(height: 4),
                     Row(
                       children: [

@@ -1,4 +1,5 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import '../core/database/app_database.dart';
 import '../core/database/daos/habit_dao.dart';
 import '../core/database/daos/habit_entry_dao.dart';
@@ -7,6 +8,10 @@ import '../core/database/daos/goal_entry_dao.dart';
 import '../core/database/daos/user_settings_dao.dart';
 import '../core/database/daos/coin_dao.dart';
 import '../core/database/daos/premium_unlock_dao.dart';
+
+final supabaseProvider = Provider<SupabaseClient>((ref) {
+  return Supabase.instance.client;
+});
 
 final databaseProvider = Provider<AppDatabase>((ref) {
   return AppDatabase();

@@ -12,12 +12,14 @@ class CreateGroupDialog extends ConsumerStatefulWidget {
 }
 
 class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
-  final _controller = TextEditingController();
+  final _nameController = TextEditingController();
+  final _descriptionController = TextEditingController();
   bool _isSaving = false;
 
   @override
   void dispose() {
-    _controller.dispose();
+    _nameController.dispose();
+    _descriptionController.dispose();
     super.dispose();
   }
 
@@ -25,16 +27,32 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
   Widget build(BuildContext context) {
     return AlertDialog(
       title: const Text('Create Group'),
-      content: TextField(
-        controller: _controller,
-        decoration: InputDecoration(
-          labelText: 'Group name',
-          hintText: 'e.g. Morning Warriors',
-          border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
-        ),
-        autofocus: true,
-        textCapitalization: TextCapitalization.words,
-        onSubmitted: (_) => _create(),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          TextField(
+            controller: _nameController,
+            decoration: InputDecoration(
+              labelText: 'Group name',
+              hintText: 'e.g. Morning Warriors',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            autofocus: true,
+            textCapitalization: TextCapitalization.words,
+            onSubmitted: (_) => _create(),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _descriptionController,
+            decoration: InputDecoration(
+              labelText: 'Description (optional)',
+              hintText: 'e.g. Daily morning routines',
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(12)),
+            ),
+            textCapitalization: TextCapitalization.sentences,
+            maxLines: 2,
+          ),
+        ],
       ),
       actions: [
         TextButton(
@@ -56,12 +74,17 @@ class _CreateGroupDialogState extends ConsumerState<CreateGroupDialog> {
   }
 
   Future<void> _create() async {
-    final name = _controller.text.trim();
+    final name = _nameController.text.trim();
     if (name.isEmpty) return;
+
+    final description = _descriptionController.text.trim();
 
     setState(() => _isSaving = true);
     final notifier = ref.read(groupsProvider.notifier);
-    final groupId = await notifier.createGroup(name);
+    final groupId = await notifier.createGroup(
+      name,
+      description: description.isNotEmpty ? description : null,
+    );
 
     if (!mounted) return;
     Navigator.pop(context);

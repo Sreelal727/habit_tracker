@@ -1,5 +1,5 @@
 import 'dart:async';
-import 'package:firebase_auth/firebase_auth.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:go_router/go_router.dart';
@@ -17,15 +17,17 @@ import '../features/groups/group_detail_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/manage_habits_screen.dart';
 import '../features/coins/shop_screen.dart';
+import '../features/proofs/validation_queue_screen.dart';
+import '../features/milestones/milestones_screen.dart';
 import '../providers/app_providers.dart';
 
 final GlobalKey<NavigatorState> _rootNavigatorKey = GlobalKey<NavigatorState>();
 
 class _AuthNotifier extends ChangeNotifier {
-  late final StreamSubscription<User?> _sub;
+  late final StreamSubscription<AuthState> _sub;
 
   _AuthNotifier() {
-    _sub = FirebaseAuth.instance.authStateChanges().listen((_) {
+    _sub = Supabase.instance.client.auth.onAuthStateChange.listen((_) {
       notifyListeners();
     });
   }
@@ -46,7 +48,7 @@ final routerProvider = Provider<GoRouter>((ref) {
     initialLocation: '/today',
     refreshListenable: authNotifier,
     redirect: (context, state) async {
-      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+      final isLoggedIn = Supabase.instance.client.auth.currentUser != null;
       final isAuthRoute = state.matchedLocation == '/welcome' ||
           state.matchedLocation == '/login' ||
           state.matchedLocation == '/signup' ||
@@ -155,6 +157,16 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) =>
             const HabitSelectionScreen(isOnboarding: false),
+      ),
+      GoRoute(
+        path: '/validation-queue',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const ValidationQueueScreen(),
+      ),
+      GoRoute(
+        path: '/milestones',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) => const MilestonesScreen(),
       ),
       GoRoute(
         path: '/settings',
