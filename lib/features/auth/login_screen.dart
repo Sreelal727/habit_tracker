@@ -64,7 +64,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 Text(
                   'Sign in to continue tracking your habits',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 40),
                 // Email
@@ -154,7 +154,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                     const Expanded(child: Divider()),
                     Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 16),
-                      child: Text('OR', style: TextStyle(color: Colors.grey[500])),
+                      child: Text('OR', style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)),
                     ),
                     const Expanded(child: Divider()),
                   ],
@@ -173,7 +173,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(12),
                       ),
-                      side: BorderSide(color: Colors.grey[300]!),
+                      side: BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
                     ),
                     icon: Image.network(
                       'https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg',
@@ -195,7 +195,7 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                   children: [
                     Text(
                       "Don't have an account? ",
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     GestureDetector(
                       onTap: () => context.go('/signup'),

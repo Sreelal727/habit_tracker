@@ -72,7 +72,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                 Text(
                   'Start your habit tracking journey',
                   textAlign: TextAlign.center,
-                  style: TextStyle(color: Colors.grey[600]),
+                  style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                 ),
                 const SizedBox(height: 32),
                 // Name
@@ -195,7 +195,7 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
                   children: [
                     Text(
                       'Already have an account? ',
-                      style: TextStyle(color: Colors.grey[600]),
+                      style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
                     ),
                     GestureDetector(
                       onTap: () => context.go('/login'),

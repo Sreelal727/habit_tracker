@@ -94,6 +94,10 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
     final completedCount =
         state.habits.where((h) => state.isHabitCompleted(h.id)).length;
     final totalCount = state.habits.length;
+    final percentage = totalCount > 0
+        ? (completedCount / totalCount * 100).round()
+        : 0;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -107,9 +111,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 Text('Habits',
                     style: Theme.of(context).textTheme.titleMedium?.copyWith(
                         fontWeight: FontWeight.bold)),
-                Text('$completedCount/$totalCount',
+                Text('$percentage% completed',
                     style: Theme.of(context).textTheme.bodySmall?.copyWith(
-                        color: Colors.grey)),
+                        color: colorScheme.onSurfaceVariant)),
               ],
             ),
             if (totalCount > 0) ...[
@@ -119,17 +123,17 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                 child: LinearProgressIndicator(
                   value: totalCount > 0 ? completedCount / totalCount : 0,
                   minHeight: 6,
-                  backgroundColor: Colors.grey.shade200,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
                 ),
               ),
             ],
             const SizedBox(height: 12),
             if (state.habits.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Text('No habits yet. Tap + to add one!',
-                      style: TextStyle(color: Colors.grey)),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant)),
                 ),
               )
             else
@@ -151,24 +155,52 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
 
   Widget _buildDailyGoalsCard(
       BuildContext context, TodayState state, TodayNotifier notifier) {
+    final completedCount =
+        state.dailyGoals.where((g) => state.isGoalCompleted(g.id)).length;
+    final totalCount = state.dailyGoals.length;
+    final percentage = totalCount > 0
+        ? (completedCount / totalCount * 100).round()
+        : 0;
+    final colorScheme = Theme.of(context).colorScheme;
+
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(16),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text('Daily Goals',
-                style: Theme.of(context)
-                    .textTheme
-                    .titleMedium
-                    ?.copyWith(fontWeight: FontWeight.bold)),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Daily Goals',
+                    style: Theme.of(context)
+                        .textTheme
+                        .titleMedium
+                        ?.copyWith(fontWeight: FontWeight.bold)),
+                if (totalCount > 0)
+                  Text('$percentage% completed',
+                      style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                          color: colorScheme.onSurfaceVariant)),
+              ],
+            ),
+            if (totalCount > 0) ...[
+              const SizedBox(height: 8),
+              ClipRRect(
+                borderRadius: BorderRadius.circular(4),
+                child: LinearProgressIndicator(
+                  value: completedCount / totalCount,
+                  minHeight: 6,
+                  backgroundColor: colorScheme.surfaceContainerHighest,
+                ),
+              ),
+            ],
             const SizedBox(height: 12),
             if (state.dailyGoals.isEmpty)
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 24),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 24),
                 child: Center(
                   child: Text('No daily goals. Tap + to add one!',
-                      style: TextStyle(color: Colors.grey)),
+                      style: TextStyle(color: colorScheme.onSurfaceVariant)),
                 ),
               )
             else
@@ -185,9 +217,9 @@ class _TodayScreenState extends ConsumerState<TodayScreen> {
                   title: Text(
                     goal.title,
                     style: TextStyle(
-                      decoration:
-                          isCompleted ? TextDecoration.lineThrough : null,
-                      color: isCompleted ? Colors.grey : null,
+                      color: isCompleted
+                          ? colorScheme.onSurfaceVariant
+                          : null,
                     ),
                   ),
                   trailing: IconButton(
@@ -299,6 +331,7 @@ class _HabitTile extends StatelessWidget {
   Widget build(BuildContext context) {
     final color = Color(habit.color);
     final subtitle = _getCustomSubtitle();
+    final colorScheme = Theme.of(context).colorScheme;
 
     return ListTile(
       contentPadding: EdgeInsets.zero,
@@ -322,8 +355,7 @@ class _HabitTile extends StatelessWidget {
       title: Text(
         habit.name,
         style: TextStyle(
-          decoration: isCompleted ? TextDecoration.lineThrough : null,
-          color: isCompleted ? Colors.grey : null,
+          color: isCompleted ? colorScheme.onSurfaceVariant : null,
           fontWeight: FontWeight.w500,
         ),
       ),
@@ -333,7 +365,7 @@ class _HabitTile extends StatelessWidget {
               style: Theme.of(context)
                   .textTheme
                   .bodySmall
-                  ?.copyWith(color: Colors.grey[500]),
+                  ?.copyWith(color: colorScheme.onSurfaceVariant),
             )
           : null,
       trailing: Row(
@@ -349,7 +381,7 @@ class _HabitTile extends StatelessWidget {
                 style: Theme.of(context)
                     .textTheme
                     .bodySmall
-                    ?.copyWith(color: Colors.grey)),
+                    ?.copyWith(color: colorScheme.onSurfaceVariant)),
         ],
       ),
     );

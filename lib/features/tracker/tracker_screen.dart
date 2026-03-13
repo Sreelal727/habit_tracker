@@ -11,15 +11,16 @@ class TrackerScreen extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(trackerProvider);
     final notifier = ref.read(trackerProvider.notifier);
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Scaffold(
       appBar: AppBar(title: const Text('Tracker')),
       body: state.isLoading
           ? const Center(child: CircularProgressIndicator())
           : state.habits.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text('No habits to track yet.',
-                      style: TextStyle(color: Colors.grey)))
+                      style: TextStyle(color: colorScheme.onSurfaceVariant)))
               : _buildGrid(context, state, notifier),
     );
   }
@@ -27,11 +28,12 @@ class TrackerScreen extends ConsumerWidget {
   Widget _buildGrid(
       BuildContext context, TrackerState state, TrackerNotifier notifier) {
     final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
     final dates = List.generate(
       state.daysToShow,
-      (i) => DateTime(now.year, now.month, now.day)
-          .subtract(Duration(days: state.daysToShow - 1 - i)),
+      (i) => today.subtract(Duration(days: state.daysToShow - 1 - i)),
     );
+    final colorScheme = Theme.of(context).colorScheme;
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -44,20 +46,25 @@ class TrackerScreen extends ConsumerWidget {
             Row(
               children: [
                 const SizedBox(width: 120),
-                ...dates.map((date) => SizedBox(
-                      width: 32,
-                      child: Center(
-                        child: Text(
-                          DateFormat('d').format(date),
-                          style: Theme.of(context).textTheme.labelSmall?.copyWith(
-                            color: _isToday(date)
-                                ? Theme.of(context).colorScheme.primary
-                                : Colors.grey,
-                            fontWeight: _isToday(date) ? FontWeight.bold : null,
-                          ),
+                ...dates.map((date) {
+                  final isFuture = date.isAfter(today);
+                  return SizedBox(
+                    width: 32,
+                    child: Center(
+                      child: Text(
+                        DateFormat('d').format(date),
+                        style: Theme.of(context).textTheme.labelSmall?.copyWith(
+                          color: _isToday(date)
+                              ? Theme.of(context).colorScheme.primary
+                              : isFuture
+                                  ? colorScheme.onSurfaceVariant.withValues(alpha: 0.4)
+                                  : colorScheme.onSurfaceVariant,
+                          fontWeight: _isToday(date) ? FontWeight.bold : null,
                         ),
                       ),
-                    )),
+                    ),
+                  );
+                }),
               ],
             ),
             // Month indicator
@@ -73,7 +80,9 @@ class TrackerScreen extends ConsumerWidget {
                                 style: Theme.of(context)
                                     .textTheme
                                     .labelSmall
-                                    ?.copyWith(color: Colors.grey, fontSize: 9),
+                                    ?.copyWith(
+                                        color: colorScheme.onSurfaceVariant,
+                                        fontSize: 9),
                               )
                             : const SizedBox.shrink(),
                       ),
@@ -109,23 +118,31 @@ class TrackerScreen extends ConsumerWidget {
                       ),
                     ),
                     ...dates.map((date) {
+                      final isFuture = date.isAfter(today);
                       final completed = state.isCompleted(habit.id, date);
                       return GestureDetector(
-                        onTap: () => notifier.toggleEntry(habit.id, date),
+                        onTap: isFuture
+                            ? null
+                            : () => notifier.toggleEntry(habit.id, date),
                         child: Container(
                           width: 28,
                           height: 28,
                           margin: const EdgeInsets.all(2),
                           decoration: BoxDecoration(
-                            color: completed
-                                ? color
-                                : color.withValues(alpha: 0.08),
+                            color: isFuture
+                                ? colorScheme.surfaceContainerHighest
+                                    .withValues(alpha: 0.5)
+                                : completed
+                                    ? color
+                                    : color.withValues(alpha: 0.08),
                             borderRadius: BorderRadius.circular(6),
                           ),
-                          child: completed
-                              ? const Icon(Icons.check,
-                                  size: 14, color: Colors.white)
-                              : null,
+                          child: isFuture
+                              ? null
+                              : completed
+                                  ? const Icon(Icons.check,
+                                      size: 14, color: Colors.white)
+                                  : null,
                         ),
                       );
                     }),

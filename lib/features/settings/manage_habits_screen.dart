@@ -23,9 +23,9 @@ class ManageHabitsScreen extends ConsumerWidget {
         error: (e, _) => Center(child: Text('Error: $e')),
         data: (habits) {
           if (habits.isEmpty) {
-            return const Center(
+            return Center(
                 child: Text('No habits yet.',
-                    style: TextStyle(color: Colors.grey)));
+                    style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant)));
           }
 
           final activeHabits =
@@ -62,8 +62,8 @@ class ManageHabitsScreen extends ConsumerWidget {
                                   child: const Text('Cancel')),
                               TextButton(
                                   onPressed: () => Navigator.pop(ctx, true),
-                                  child: const Text('Delete',
-                                      style: TextStyle(color: Colors.red))),
+                                  child: Text('Delete',
+                                      style: TextStyle(color: Theme.of(context).colorScheme.error))),
                             ],
                           ),
                         );
@@ -83,7 +83,8 @@ class ManageHabitsScreen extends ConsumerWidget {
                         .textTheme
                         .titleSmall
                         ?.copyWith(
-                            fontWeight: FontWeight.bold, color: Colors.grey)),
+                            fontWeight: FontWeight.bold,
+                            color: Theme.of(context).colorScheme.onSurfaceVariant)),
                 const SizedBox(height: 8),
                 ...archivedHabits.map((habit) => _HabitManageTile(
                       habit: habit,
@@ -154,8 +155,8 @@ class _HabitManageTile extends StatelessWidget {
               ),
             if (onDelete != null)
               IconButton(
-                icon: const Icon(Icons.delete_outline,
-                    size: 20, color: Colors.red),
+                icon: Icon(Icons.delete_outline,
+                    size: 20, color: Theme.of(context).colorScheme.error),
                 tooltip: 'Delete',
                 onPressed: onDelete,
               ),

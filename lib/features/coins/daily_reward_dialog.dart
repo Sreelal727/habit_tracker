@@ -92,14 +92,14 @@ class _DailyRewardDialogState extends ConsumerState<DailyRewardDialog>
               Text(
                 'Open the app daily to earn coins!',
                 textAlign: TextAlign.center,
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 20),
               // Reward breakdown
               Container(
                 padding: const EdgeInsets.all(16),
                 decoration: BoxDecoration(
-                  color: Colors.grey[100],
+                  color: Theme.of(context).colorScheme.surfaceContainerHighest,
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Column(
@@ -174,7 +174,7 @@ class _DailyRewardDialogState extends ConsumerState<DailyRewardDialog>
               const SizedBox(height: 4),
               Text(
                 'Balance: ${coinsState.coinBalance} coins',
-                style: TextStyle(color: Colors.grey[600]),
+                style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
               ),
               const SizedBox(height: 20),
               SizedBox(

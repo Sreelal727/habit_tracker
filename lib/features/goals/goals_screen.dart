@@ -39,11 +39,19 @@ class _WeeklyGoalsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(goalsProvider);
     final notifier = ref.read(goalsProvider.notifier);
+    final colorScheme = Theme.of(context).colorScheme;
 
     final weekStart = state.currentWeekStart;
     final weekEnd = weekStart.add(const Duration(days: 6));
     final weekLabel =
         '${DateFormat('MMM d').format(weekStart)} - ${DateFormat('MMM d').format(weekEnd)}';
+
+    final completedCount =
+        state.weeklyGoals.where((g) => state.isWeeklyGoalCompleted(g.id)).length;
+    final totalCount = state.weeklyGoals.length;
+    final percentage = totalCount > 0
+        ? (completedCount / totalCount * 100).round()
+        : 0;
 
     return Column(
       children: [
@@ -68,11 +76,35 @@ class _WeeklyGoalsTab extends ConsumerWidget {
             ],
           ),
         ),
+        if (totalCount > 0)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: completedCount / totalCount,
+                      minHeight: 6,
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text('$percentage%',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        const SizedBox(height: 4),
         Expanded(
           child: state.weeklyGoals.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text('No weekly goals yet.',
-                      style: TextStyle(color: Colors.grey)))
+                      style: TextStyle(color: colorScheme.onSurfaceVariant)))
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: state.weeklyGoals.length,
@@ -89,9 +121,9 @@ class _WeeklyGoalsTab extends ConsumerWidget {
                       title: Text(
                         goal.title,
                         style: TextStyle(
-                          decoration:
-                              isCompleted ? TextDecoration.lineThrough : null,
-                          color: isCompleted ? Colors.grey : null,
+                          color: isCompleted
+                              ? colorScheme.onSurfaceVariant
+                              : null,
                         ),
                       ),
                       trailing: IconButton(
@@ -138,7 +170,15 @@ class _YearlyGoalsTab extends ConsumerWidget {
   Widget build(BuildContext context, WidgetRef ref) {
     final state = ref.watch(goalsProvider);
     final notifier = ref.read(goalsProvider.notifier);
+    final colorScheme = Theme.of(context).colorScheme;
     final year = DateTime.now().year;
+
+    final completedCount =
+        state.yearlyGoals.where((g) => state.isYearlyGoalCompleted(g.id)).length;
+    final totalCount = state.yearlyGoals.length;
+    final percentage = totalCount > 0
+        ? (completedCount / totalCount * 100).round()
+        : 0;
 
     return Column(
       children: [
@@ -150,11 +190,35 @@ class _YearlyGoalsTab extends ConsumerWidget {
                   .titleSmall
                   ?.copyWith(fontWeight: FontWeight.bold)),
         ),
+        if (totalCount > 0)
+          Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 16),
+            child: Row(
+              children: [
+                Expanded(
+                  child: ClipRRect(
+                    borderRadius: BorderRadius.circular(4),
+                    child: LinearProgressIndicator(
+                      value: completedCount / totalCount,
+                      minHeight: 6,
+                      backgroundColor: colorScheme.surfaceContainerHighest,
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Text('$percentage%',
+                    style: Theme.of(context).textTheme.bodySmall?.copyWith(
+                        color: colorScheme.onSurfaceVariant,
+                        fontWeight: FontWeight.w600)),
+              ],
+            ),
+          ),
+        const SizedBox(height: 4),
         Expanded(
           child: state.yearlyGoals.isEmpty
-              ? const Center(
+              ? Center(
                   child: Text('No yearly goals yet.',
-                      style: TextStyle(color: Colors.grey)))
+                      style: TextStyle(color: colorScheme.onSurfaceVariant)))
               : ListView.builder(
                   padding: const EdgeInsets.symmetric(horizontal: 16),
                   itemCount: state.yearlyGoals.length,
@@ -171,9 +235,9 @@ class _YearlyGoalsTab extends ConsumerWidget {
                       title: Text(
                         goal.title,
                         style: TextStyle(
-                          decoration:
-                              isCompleted ? TextDecoration.lineThrough : null,
-                          color: isCompleted ? Colors.grey : null,
+                          color: isCompleted
+                              ? colorScheme.onSurfaceVariant
+                              : null,
                         ),
                       ),
                       trailing: IconButton(

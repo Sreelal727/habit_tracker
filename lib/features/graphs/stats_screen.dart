@@ -34,6 +34,7 @@ class StatsScreen extends ConsumerWidget {
     if (state.habits.isEmpty) {
       return const SizedBox.shrink();
     }
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -94,8 +95,9 @@ class StatsScreen extends ConsumerWidget {
                         getTitlesWidget: (value, meta) {
                           if (value % 25 != 0) return const SizedBox.shrink();
                           return Text('${value.toInt()}%',
-                              style: const TextStyle(
-                                  fontSize: 10, color: Colors.grey));
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  color: colorScheme.onSurfaceVariant));
                         },
                       ),
                     ),
@@ -142,6 +144,7 @@ class StatsScreen extends ConsumerWidget {
       final count = state.dailyHabitCounts[date] ?? 0;
       spots.add(FlSpot(i.toDouble(), count.toDouble()));
     }
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -187,8 +190,9 @@ class StatsScreen extends ConsumerWidget {
                           return Padding(
                             padding: const EdgeInsets.only(top: 4),
                             child: Text(DateFormat('d').format(date),
-                                style: const TextStyle(
-                                    fontSize: 10, color: Colors.grey)),
+                                style: TextStyle(
+                                    fontSize: 10,
+                                    color: colorScheme.onSurfaceVariant)),
                           );
                         },
                       ),
@@ -202,8 +206,9 @@ class StatsScreen extends ConsumerWidget {
                             return const SizedBox.shrink();
                           }
                           return Text('${value.toInt()}',
-                              style: const TextStyle(
-                                  fontSize: 10, color: Colors.grey));
+                              style: TextStyle(
+                                  fontSize: 10,
+                                  color: colorScheme.onSurfaceVariant));
                         },
                       ),
                     ),
@@ -246,6 +251,7 @@ class StatsScreen extends ConsumerWidget {
     final lastDay = DateTime(month.year, month.month + 1, 0);
     final startWeekday = firstDay.weekday; // 1=Mon
     final daysInMonth = lastDay.day;
+    final colorScheme = Theme.of(context).colorScheme;
 
     return Card(
       child: Padding(
@@ -275,9 +281,9 @@ class StatsScreen extends ConsumerWidget {
                   .map((d) => Expanded(
                         child: Center(
                           child: Text(d,
-                              style: const TextStyle(
+                              style: TextStyle(
                                   fontSize: 12,
-                                  color: Colors.grey,
+                                  color: colorScheme.onSurfaceVariant,
                                   fontWeight: FontWeight.w500)),
                         ),
                       ))
@@ -346,7 +352,7 @@ class StatsScreen extends ConsumerWidget {
                                   decoration: BoxDecoration(
                                     color: habit != null
                                         ? Color(habit.color)
-                                        : Colors.grey,
+                                        : colorScheme.onSurfaceVariant,
                                     shape: BoxShape.circle,
                                   ),
                                 );

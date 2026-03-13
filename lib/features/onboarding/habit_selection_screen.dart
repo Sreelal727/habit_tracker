@@ -178,7 +178,7 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
                   Text(
                     'Select habits you want to build. Tap the settings icon to customize each one.',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurfaceVariant,
                     ),
                   ),
                 ],
@@ -203,7 +203,7 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
                         setState(() => _activeCategory = cat),
                     selectedColor: AppColors.primary,
                     labelStyle: TextStyle(
-                      color: isActive ? Colors.white : Colors.grey[700],
+                      color: isActive ? Colors.white : theme.colorScheme.onSurfaceVariant,
                       fontWeight:
                           isActive ? FontWeight.w600 : FontWeight.normal,
                     ),
@@ -255,7 +255,7 @@ class _HabitSelectionScreenState extends ConsumerState<HabitSelectionScreen> {
                   Text(
                     '${_selectedHabits.length} selected',
                     style: theme.textTheme.bodyMedium?.copyWith(
-                      color: Colors.grey[600],
+                      color: theme.colorScheme.onSurfaceVariant,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
@@ -317,7 +317,7 @@ class _HabitCard extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         side: isSelected
             ? BorderSide(color: color, width: 2)
-            : BorderSide(color: Colors.grey.shade200),
+            : BorderSide(color: Theme.of(context).colorScheme.outlineVariant),
       ),
       child: InkWell(
         onTap: onToggle,
@@ -360,7 +360,7 @@ class _HabitCard extends StatelessWidget {
                     Text(
                       preset.description,
                       style: theme.textTheme.bodySmall?.copyWith(
-                        color: Colors.grey[600],
+                        color: theme.colorScheme.onSurfaceVariant,
                       ),
                     ),
                     if (isSelected && customValues != null) ...[
@@ -388,7 +388,7 @@ class _HabitCard extends StatelessWidget {
                   color: isSelected ? color : Colors.transparent,
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isSelected ? color : Colors.grey.shade400,
+                    color: isSelected ? color : Theme.of(context).colorScheme.outline,
                     width: 2,
                   ),
                 ),
@@ -577,7 +577,7 @@ class _CustomizationSheetState extends State<_CustomizationSheet> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
               decoration: BoxDecoration(
-                border: Border.all(color: Colors.grey.shade300),
+                border: Border.all(color: Theme.of(context).colorScheme.outlineVariant),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -590,7 +590,7 @@ class _CustomizationSheetState extends State<_CustomizationSheet> {
                         fontSize: 16, fontWeight: FontWeight.w500),
                   ),
                   const Spacer(),
-                  Icon(Icons.edit, color: Colors.grey[400], size: 18),
+                  Icon(Icons.edit, color: Theme.of(context).colorScheme.onSurfaceVariant, size: 18),
                 ],
               ),
             ),

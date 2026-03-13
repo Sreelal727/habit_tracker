@@ -49,7 +49,7 @@ class WelcomeScreen extends StatelessWidget {
                 'Build better habits, achieve your goals,\nand earn rewards along the way.',
                 textAlign: TextAlign.center,
                 style: Theme.of(context).textTheme.bodyLarge?.copyWith(
-                      color: Colors.grey[600],
+                      color: Theme.of(context).colorScheme.onSurfaceVariant,
                       height: 1.5,
                     ),
               ),
@@ -120,7 +120,7 @@ class _FeatureChip extends StatelessWidget {
         const SizedBox(width: 8),
         Text(
           text,
-          style: TextStyle(color: Colors.grey[700], fontSize: 14),
+          style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant, fontSize: 14),
         ),
       ],
     );

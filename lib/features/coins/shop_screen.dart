@@ -86,7 +86,7 @@ class ShopScreen extends ConsumerWidget {
           const SizedBox(height: 4),
           Text(
             'Spend your coins to unlock features',
-            style: TextStyle(color: Colors.grey[600]),
+            style: TextStyle(color: Theme.of(context).colorScheme.onSurfaceVariant),
           ),
           const SizedBox(height: 16),
           // Feature grid
