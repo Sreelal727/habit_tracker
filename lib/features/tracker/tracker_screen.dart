@@ -5,11 +5,18 @@ import 'tracker_notifier.dart';
 import '../../config/constants.dart';
 import '../../shared/widgets/percent_slider_dialog.dart';
 
-class TrackerScreen extends ConsumerWidget {
+class TrackerScreen extends ConsumerStatefulWidget {
   const TrackerScreen({super.key});
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  ConsumerState<TrackerScreen> createState() => _TrackerScreenState();
+}
+
+class _TrackerScreenState extends ConsumerState<TrackerScreen> {
+  String? _filterHabitId; // null = show all
+
+  @override
+  Widget build(BuildContext context) {
     final state = ref.watch(trackerProvider);
     final notifier = ref.read(trackerProvider.notifier);
     final colorScheme = Theme.of(context).colorScheme;
@@ -22,7 +29,59 @@ class TrackerScreen extends ConsumerWidget {
               ? Center(
                   child: Text('No habits to track yet.',
                       style: TextStyle(color: colorScheme.onSurfaceVariant)))
-              : _buildGrid(context, state, notifier),
+              : Column(
+                  children: [
+                    // Filter chip row
+                    _buildFilterRow(state, colorScheme),
+                    // Grid
+                    Expanded(child: _buildGrid(context, state, notifier)),
+                  ],
+                ),
+    );
+  }
+
+  Widget _buildFilterRow(TrackerState state, ColorScheme colorScheme) {
+    return SizedBox(
+      height: 44,
+      child: ListView(
+        scrollDirection: Axis.horizontal,
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+        children: [
+          Padding(
+            padding: const EdgeInsets.only(right: 8),
+            child: FilterChip(
+              label: const Text('All'),
+              selected: _filterHabitId == null,
+              onSelected: (_) => setState(() => _filterHabitId = null),
+            ),
+          ),
+          ...state.habits.map((h) {
+            final isSelected = _filterHabitId == h.id;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: FilterChip(
+                avatar: Icon(
+                  HabitIcons.getIcon(h.icon),
+                  size: 14,
+                  color: isSelected ? Colors.white : Color(h.color),
+                ),
+                label: Text(
+                  h.name.length > 12 ? '${h.name.substring(0, 11)}…' : h.name,
+                  style: TextStyle(
+                    color: isSelected ? Colors.white : null,
+                    fontSize: 12,
+                  ),
+                ),
+                selected: isSelected,
+                selectedColor: Color(h.color),
+                onSelected: (_) => setState(() =>
+                    _filterHabitId = isSelected ? null : h.id),
+                showCheckmark: false,
+              ),
+            );
+          }),
+        ],
+      ),
     );
   }
 
@@ -35,6 +94,11 @@ class TrackerScreen extends ConsumerWidget {
       (i) => today.subtract(Duration(days: state.daysToShow - 1 - i)),
     );
     final colorScheme = Theme.of(context).colorScheme;
+
+    // Filter habits by selected filter
+    final visibleHabits = _filterHabitId == null
+        ? state.habits
+        : state.habits.where((h) => h.id == _filterHabitId).toList();
 
     return SingleChildScrollView(
       padding: const EdgeInsets.all(16),
@@ -92,8 +156,8 @@ class TrackerScreen extends ConsumerWidget {
               ],
             ),
             const SizedBox(height: 8),
-            // Habit rows
-            ...state.habits.map((habit) {
+            // Habit rows (filtered)
+            ...visibleHabits.map((habit) {
               final color = Color(habit.color);
               return Padding(
                 padding: const EdgeInsets.only(bottom: 4),

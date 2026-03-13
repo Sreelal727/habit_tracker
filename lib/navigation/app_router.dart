@@ -12,6 +12,8 @@ import '../features/today/today_screen.dart';
 import '../features/tracker/tracker_screen.dart';
 import '../features/goals/goals_screen.dart';
 import '../features/graphs/stats_screen.dart';
+import '../features/groups/groups_screen.dart';
+import '../features/groups/group_detail_screen.dart';
 import '../features/settings/settings_screen.dart';
 import '../features/settings/manage_habits_screen.dart';
 import '../features/coins/shop_screen.dart';
@@ -93,7 +95,7 @@ final routerProvider = Provider<GoRouter>((ref) {
         parentNavigatorKey: _rootNavigatorKey,
         builder: (context, state) => const HabitSelectionScreen(),
       ),
-      // Main app routes
+      // Main app routes (bottom nav)
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) {
           return ScaffoldWithNavBar(navigationShell: navigationShell);
@@ -131,7 +133,22 @@ final routerProvider = Provider<GoRouter>((ref) {
               ),
             ],
           ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/groups',
+                builder: (context, state) => const GroupsScreen(),
+              ),
+            ],
+          ),
         ],
+      ),
+      // Group detail (pushed above bottom nav)
+      GoRoute(
+        path: '/groups/:id',
+        parentNavigatorKey: _rootNavigatorKey,
+        builder: (context, state) =>
+            GroupDetailScreen(groupId: state.pathParameters['id']!),
       ),
       GoRoute(
         path: '/presets',
@@ -197,6 +214,11 @@ class ScaffoldWithNavBar extends StatelessWidget {
             icon: Icon(Icons.bar_chart_outlined),
             selectedIcon: Icon(Icons.bar_chart),
             label: 'Stats',
+          ),
+          NavigationDestination(
+            icon: Icon(Icons.groups_outlined),
+            selectedIcon: Icon(Icons.groups),
+            label: 'Groups',
           ),
         ],
       ),
